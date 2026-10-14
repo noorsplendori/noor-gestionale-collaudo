@@ -1,0 +1,14 @@
+{
+  "name": "noor-gestionale-collaudo",
+  "version": "2.5.85-staging",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:backend": "node --test tests/staging-sale-backend.test.mjs",
+    "build": "node scripts/verify-staging.mjs"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.4.0"
+  },
+  "engines": {"node": ">=20"}
+}

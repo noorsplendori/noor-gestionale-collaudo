@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <title>Noor Splendori - Gestionale</title>
+  <meta name="theme-color" content="#ffffff">
+  <meta name="color-scheme" content="light">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Noor Splendori">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <style id="criticalBootStyle">
+    html,body{margin:0;min-height:100%;background:#fff!important;color-scheme:light}
+    body{min-height:100vh;min-height:100dvh}
+    #boot.boot{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;background:#fff!important;padding:24px;box-sizing:border-box}
+    #boot .boot-card-pro{width:min(500px,calc(100vw - 34px));box-sizing:border-box;display:flex;flex-direction:column;align-items:center;text-align:center}
+    #boot .boot-logo{min-height:64px;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+    #boot .boot-logo img{display:block;width:auto;height:auto;max-width:min(210px,74vw);max-height:72px;object-fit:contain}
+    @media(max-width:560px){#boot.boot{padding:18px}#boot .boot-card-pro{width:min(92vw,500px)}}
+  </style>
+
+  <link rel="apple-touch-startup-image" href="/assets/splash/iphone-393x852.png" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="/assets/splash/iphone-402x874.png" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="/assets/splash/iphone-430x932.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="/assets/splash/iphone-440x956.png" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="/assets/splash/iphone-375x812.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="/assets/splash/iphone-414x896.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="/assets/icons/favicon-64.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png">
+  <link rel="stylesheet" href="/assets/css/app.css?v=2.5.85">
+</head>
+<body style="background:#ffffff">
+  <div id="boot" class="boot"><div class="boot-card boot-card-pro"><div id="bootLogo" class="boot-logo"><img src="/assets/icons/logo-noor-horizontal.png" alt="Noor Splendori"></div><div class="boot-kicker">NOOR SPLENDORI</div><h1>Preparazione gestionale</h1><p id="bootMessage">Verifica accesso e sincronizzazione sicura dei dati…</p><div class="boot-progress"><span></span></div><div class="boot-status"><i></i><span>Connessione cloud</span></div><div id="bootActions" class="boot-actions hidden"><button id="bootRetry" class="btn primary" type="button">Riprova</button><button id="bootOpenLogin" class="btn secondary" type="button">Torna al login</button></div><small>La schermata si chiude automaticamente appena il profilo è pronto.</small></div></div>
+
+  <section id="login" class="login hidden" hidden>
+    <div class="login-shell">
+      <div class="login-copy">
+        <div class="brand-mark lg has-image" id="loginLogo"><img src="/assets/icons/logo-noor-horizontal.png" alt="Noor Splendori"></div>
+        <h1>Gestionale Cloud</h1>
+        <p>Vendite, magazzino, ordini e dipendenti in cloud.</p>
+      </div>
+      <form id="loginForm" class="login-card">
+        <h2>Accedi</h2>
+        <p>Usa le credenziali di accesso al gestionale.</p>
+        <label>Email<input id="loginEmail" type="email" inputmode="email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" required></label>
+        <label>Password<div class="login-password-wrap"><input id="loginPassword" type="password" autocomplete="current-password" required><button id="toggleLoginPassword" class="password-eye-btn" type="button" aria-label="Mostra password" title="Mostra password"><span class="eye-open" aria-hidden="true">◉</span></button></div></label>
+        <div class="login-help-box"><span class="login-help-icon">?</span><div><b>Non ricordi le credenziali?</b><small>Contatta il tuo superiore per recuperare o aggiornare i dati di accesso.</small></div></div>
+        <div class="login-consent-row"><label class="login-consent" for="loginAccessConsent"><input id="loginAccessConsent" type="checkbox"><span>Acconsento all'accesso registrato.</span></label><button id="loginAccessInfo" class="login-info-btn" type="button" aria-label="Informazioni sulla registrazione degli accessi">i</button></div>
+        <button id="loginSubmitBtn" class="btn primary" type="submit">Accedi</button>
+        <div id="loginStatus" class="status"></div>
+      </form>
+    </div>
+  </section>
+
+
+  <div id="loginInfoOverlay" class="login-info-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="loginInfoTitle"><div class="login-info-card"><button id="loginInfoClose" class="login-info-close" type="button" aria-label="Chiudi">×</button><div class="login-info-shield" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 5 3 8 7 9 4-1 7-4 7-9V6z"/><path d="m9 12 2 2 4-5"/></svg></div><div><h2 id="loginInfoTitle">Accesso registrato</h2><p>Gli accessi vengono registrati per proteggere il gestionale e attribuire correttamente le operazioni all’account che le esegue.</p></div><div class="login-info-list"><div><span>01</span><p><b>Identificazione operatore</b><small>Ogni accesso viene associato all’account personale utilizzato.</small></p></div><div><span>02</span><p><b>Tracciabilità operazioni</b><small>Vendite, modifiche e operazioni possono essere ricostruite correttamente.</small></p></div><div><span>03</span><p><b>Credenziali personali</b><small>Utilizza sempre il tuo account e non condividere le credenziali con altri operatori.</small></p></div></div></div></div>
+  <div id="app" class="app-shell hidden" hidden>
+    <aside class="sidebar" id="sidebar">
+      <div class="side-head side-head-toggle">
+        <button id="collapseBtn" class="icon-btn" title="Apri / chiudi menu" aria-label="Apri o chiudi menu">☰</button>
+      </div>
+      <nav id="mainNav" class="nav">
+        <button data-route="home" class="active"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7v9H6v-7h12v7"/></svg></span><b>Home</b></button>
+        <button data-route="products"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 7h16v13H4zM7 4h10v3M8 11h8M8 15h5"/></svg></span><b>Prodotti</b></button>
+        <button data-route="sell"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 5h2l2 10h9l2-7H7M9 19h.01M17 19h.01"/></svg></span><b>Vendi</b><i id="cartBadge" class="cart-badge hidden">0</i></button>
+        <button data-route="history"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M6 3h12v18H6zM9 8h6M9 12h6M9 16h4"/></svg></span><b>Storico</b></button>
+        <button data-route="stock"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9 12 4l9 5v11H3zM7 20v-7h10v7M9 16h6"/></svg></span><b>Magazzino</b></button>
+        <button data-route="discounts"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M7.5 8a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM16.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"/></svg></span><b>Sconti</b></button>
+        <button data-route="employees" data-perm="manageEmployees"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM2 21c0-4 3-7 7-7s7 3 7 7M17 8a3 3 0 1 0 0-6M17 14c3 0 5 2 5 5"/></svg></span><b>Dipendenti</b></button>
+        <button data-route="shifts"><span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg></span><b>Turni</b></button>
+        <button data-route="closures"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M5 4h14v17H5zM8 2v4M16 2v4M8 10h8M8 14l2 2 5-5"/></svg></span><b>Chiusure</b></button>
+        <button data-route="access" data-perm="viewAccessLogs"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 5 3 8 7 9 4-1 7-4 7-9V6zM9 12l2 2 4-5"/></svg></span><b>Accessi</b></button>
+        <button data-route="shopify" data-perm="settings"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M5 7h14l-1 14H6L5 7zM9 9V6a3 3 0 0 1 6 0v3"/></svg></span><b>Shopify</b></button>
+        <button data-route="points-of-sale" data-perm="settings"><span class="nav-icon">⌂</span><b>Punti vendita</b></button>
+        <button data-route="warehouses" data-perm="settings"><span class="nav-icon">▦</span><b>Magazzini</b></button>
+        <button data-route="settings" data-perm="settings"><span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 13.5v-3l-2-.7a7 7 0 0 0-.7-1.7l.9-1.9-2.1-2.1-1.9.9a7 7 0 0 0-1.7-.7L10.5 2h-3l-.7 2a7 7 0 0 0-1.7.7l-1.9-.9-2.1 2.1.9 1.9a7 7 0 0 0-.7 1.7L0 10.5v3l2 .7a7 7 0 0 0 .7 1.7l-.9 1.9 2.1 2.1 1.9-.9a7 7 0 0 0 1.7.7l.7 2h3l.7-2a7 7 0 0 0 1.7-.7l1.9.9 2.1-2.1-.9-1.9a7 7 0 0 0 .7-1.7z" transform="translate(1.5 0) scale(.88)"/></svg></span><b>Impostazioni</b></button>
+      </nav>
+      <div class="side-footer">
+        <button id="sideUserCard" class="side-user side-user-button" type="button"><b id="sideUserName">—</b><span id="sideUserRole">—</span><small>Apri profilo</small></button>
+        <button id="logoutBtn" class="logout"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M10 4H5v16h5M14 8l4 4-4 4M8 12h10"/></svg></span><b>Esci</b></button>
+      </div>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <div class="topbar-brand-wrap"><button id="mobileMenuBtn" class="mobile-menu-btn" type="button" aria-label="Apri menu">☰</button><button class="topbar-logo topbar-logo-home has-image" id="topbarLogo" type="button" aria-label="Vai alla dashboard" title="Vai alla dashboard"><img src="/assets/icons/logo-noor-horizontal.png" alt="Noor Splendori"></button><div><h1 id="pageTitle">Home</h1><p id="pageSub">Situazione aggiornata del negozio.</p></div></div>
+        <div class="top-actions"><label class="top-warehouse-picker" title="Magazzino attivo"><span>Magazzino</span><select id="warehousePicker"></select></label><span id="syncState" class="sync"><i></i> Online</span><button id="installAppBtn" class="btn secondary hidden" type="button">Installa app</button><button id="refreshBtn" class="btn secondary">Aggiorna</button></div>
+      </header>
+
+      <main>
+        <section id="route-home" class="route active">
+          <div id="homeWelcome" class="home-welcome" aria-live="polite">
+            <div class="home-welcome-main">
+              <div class="home-welcome-copy">
+                <div class="home-welcome-title-row">
+                  <span id="homeWelcomeEyebrow">Bentornato</span>
+                  <strong id="homeWelcomeName">—</strong>
+                </div>
+                <small>Qui trovi la situazione aggiornata del tuo gestionale.</small>
+              </div>
+            </div>
+            <div class="home-welcome-side">
+              <span class="home-welcome-date" id="homeWelcomeDate"></span>
+            </div>
+          </div>
+          <div class="stats-grid home-kpi-mega">
+            <article class="stat stat-revenue">
+              <div class="mega-kpi-icon kpi-icon-revenue" aria-hidden="true">
+                <svg viewBox="0 0 48 48" role="img">
+                  <rect x="7" y="27" width="5" height="10" rx="2"></rect><rect x="16" y="22" width="5" height="15" rx="2"></rect><rect x="25" y="17" width="5" height="20" rx="2"></rect><rect x="34" y="11" width="5" height="26" rx="2"></rect>
+                  <path d="M8 20l10-5 8 2 13-9"></path><path d="M34 8h5v5"></path>
+                </svg>
+              </div>
+              <div class="mega-kpi-copy"><span>Incasso oggi</span><strong id="statRevenue">—</strong><small>ordini completati</small></div>
+            </article>
+            <article class="stat stat-qty">
+              <div class="mega-kpi-icon kpi-icon-sales" aria-hidden="true">
+                <svg viewBox="0 0 48 48" role="img">
+                  <path class="growth-arrow" d="M12 30l8-8 6 6 10-12"></path><path class="growth-arrow" d="M31 16h5v5"></path>
+                  <path class="sales-body" d="M11 16h12l2 5h12l-2 11H18l-3-16H11"></path>
+                  <circle cx="21" cy="36" r="2.5"></circle><circle cx="33" cy="36" r="2.5"></circle>
+                </svg>
+              </div>
+              <div class="mega-kpi-copy"><span>Articoli venduti</span><strong id="statQty">—</strong><small>oggi</small></div>
+            </article>
+            <article class="stat stat-products">
+              <div class="mega-kpi-icon kpi-icon-products" aria-hidden="true">
+                <svg viewBox="0 0 48 48" role="img">
+                  <path d="M10 16l14-7 14 7-14 7z"></path><path d="M10 16v16l14 7 14-7V16"></path><path d="M24 23v16"></path><path d="M17 13l14 7"></path>
+                </svg>
+              </div>
+              <div class="mega-kpi-copy"><span>Referenze</span><strong id="statProducts">—</strong><small>prodotti caricati</small></div>
+            </article>
+            <article class="stat stat-stock-value sensitive">
+              <div class="mega-kpi-icon kpi-icon-stock" aria-hidden="true">
+                <svg viewBox="0 0 48 48" role="img">
+                  <ellipse class="coin-main" cx="20" cy="15" rx="10" ry="4"></ellipse>
+                  <path class="coin-main" d="M10 15v7c0 2.2 4.5 4 10 4s10-1.8 10-4v-7"></path>
+                  <path class="coin-main" d="M10 22v7c0 2.2 4.5 4 10 4 2.3 0 4.5-.3 6.2-.9"></path>
+                  <circle class="coin-accent" cx="33" cy="31" r="8"></circle>
+                  <path class="coin-accent" d="M33 26.8v8.4M29.8 29.3h4.8a1.9 1.9 0 0 1 0 3.8h-3.2a1.9 1.9 0 0 0 0 3.8h4.8"></path>
+                </svg>
+              </div>
+              <div class="mega-kpi-copy"><span>Valore vendita stock</span><strong id="statStockValue">—</strong><small>magazzino</small></div>
+            </article>
+            <article class="stat stat-cost-value sensitive">
+              <div class="mega-kpi-icon kpi-icon-cost" aria-hidden="true">
+                <svg viewBox="0 0 48 48" role="img">
+                  <path class="house-body" d="M10 22L24 11l14 11"></path><path class="house-body" d="M14 20v16h20V20"></path>
+                  <path class="house-body" d="M20 36v-8h8v8"></path>
+                  <circle class="money-mark" cx="34" cy="15" r="6"></circle><path class="money-mark" d="M34 12v6"></path><path class="money-mark" d="M31.5 14.2H35a1.8 1.8 0 0 1 0 3.6h-2a1.8 1.8 0 0 0 0 3.6h3.5"></path>
+                </svg>
+              </div>
+              <div class="mega-kpi-copy"><span>Valore costo stock</span><strong id="statCostValue">—</strong><small>costo reale</small></div>
+            </article>
+          </div>
+          <div id="homeQuickActions" class="home-action-grid">
+            <button class="quick-btn" data-home-go="history" id="homeQuickHistory"></button>
+            <button class="quick-btn" data-home-go="products" id="homeQuickProducts"></button>
+            <button class="quick-btn quick-sell" data-home-go="sell" id="homeQuickSell"></button>
+            <button class="quick-btn" data-home-go="stock" id="homeQuickStock"></button>
+            <div id="shiftHome" class="home-shift-card"></div>
+          </div>
+          <div class="two-col home-insights-grid">
+            <div class="panel home-insight-card"><div class="panel-head"><div><h2>Scorte basse</h2><p>Prodotti più vicini all’esaurimento</p></div><button id="openLowStockBtn" class="btn secondary compact-btn home-see-all" type="button">Vedi tutti</button></div><div id="lowStockList" class="home-vertical-chart"><div class="skeleton-line"></div></div></div>
+            <div class="panel home-insight-card"><div class="panel-head"><div><h2>Ultimi ordini</h2><p>Vendite più recenti per importo</p></div><span class="pill">Realtime</span></div><div id="latestOrders" class="home-vertical-chart"><div class="skeleton-line"></div></div></div>
+          </div>
+          <div class="version-box"><div class="brand-mark has-image" id="versionLogo"><img src="/assets/icons/logo-noor-horizontal.png" alt="Noor Splendori"></div><div><b>Noor Splendori</b><span id="versionBoxVersion">Versione V2.4.7</span><small id="versionBoxAuthor">Author: Sony</small></div><em><i></i> <span id="versionBoxBuild">Build test V2.4.7</span></em></div>
+        </section>
+
+
+        <section id="route-low-stock" class="route">
+          <div class="panel"><div class="panel-head"><div><h2>Scorte basse</h2><p>Prodotti sotto la soglia impostata, ordinati dalla giacenza più bassa.</p></div><button id="backHomeFromLowStockBtn" class="btn secondary">← Home</button></div><div class="toolbar toolbar-search-filter"><input id="lowStockSearch" placeholder="Cerca prodotto, marca o barcode"><label class="page-size-label">Mostra <select id="lowStockPageSize" class="page-size"><option>10</option><option selected>25</option><option>50</option><option>100</option><option value="all">Tutti</option></select></label><span id="lowStockCount" class="pill">0</span></div><div id="lowStockPageList" class="stock-grid"></div></div>
+        </section>
+
+        <section id="route-products" class="route">
+          <div class="panel">
+            <div class="panel-head"><div><h2>Prodotti</h2><p>Archivio prodotti aggiornato in tempo reale.</p></div><div class="actions"><button id="openDeletedProductsBtn" class="btn secondary">Prodotti eliminati</button><button id="addProductBtn" class="btn primary" data-perm="manageProducts">+ Prodotto</button></div></div>
+            <div class="product-filter-toolbar"><input id="productSearch" placeholder="Cerca nome, marca, barcode, note..."><select id="productBrandFilter"><option value="all">Tutte le marche</option></select><select id="productCategoryFilter"><option value="all">Tutte le categorie</option></select><select id="productFormatFilter"><option value="all">Tutti i formati</option></select><select id="productDiscountFilter"><option value="all">Tutti</option><option value="discounted">Solo scontati</option><option value="regular">Non scontati</option><option value="low">Scorte basse</option><option value="zero">Esauriti</option></select><label class="page-size-label">Mostra <select id="productPageSize" class="page-size"><option>10</option><option selected>25</option><option>50</option><option>100</option><option value="all">Tutti</option></select></label><span id="productCount" class="pill">0</span></div>
+            <div class="table-wrap"><table><thead><tr><th>Foto</th><th>Prodotto</th><th>Barcode</th><th>Formato</th><th>Prezzo</th><th>Q.tà</th><th>Azioni</th></tr></thead><tbody id="productsTable"></tbody></table></div>
+          </div>
+        </section>
+
+
+        <section id="route-products-deleted" class="route">
+          <div class="panel"><div class="panel-head"><div><h2>Prodotti eliminati</h2><p>Archivio prodotti rimossi con possibilità di ripristino.</p></div><button id="backProductsFromDeletedBtn" class="btn secondary">← Prodotti</button></div><div class="toolbar toolbar-search-filter"><input id="deletedProductSearch" placeholder="Cerca tra i prodotti eliminati"><label class="page-size-label">Mostra <select id="deletedProductPageSize" class="page-size"><option>10</option><option selected>25</option><option>50</option><option>100</option><option value="all">Tutti</option></select></label></div><div id="deletedProductsList" class="list"></div></div>
+        </section>
+
+        <section id="route-product-detail" class="route">
+          <div id="productDetailContent"></div>
+        </section>
+
+        <section id="route-sell" class="route">
+          <div class="sell-grid">
+            <div class="panel">
+              <div class="panel-head"><div><h2>Vendita rapida</h2><p>EAN-13: a 13 cifre il prodotto entra subito nel carrello.</p></div></div>
+              <input id="barcodeInput" class="scan-input" inputmode="numeric" maxlength="13" placeholder="Scansiona o digita barcode EAN-13">
+              <div class="toolbar toolbar-search-filter"><input id="sellSearch" placeholder="Cerca prodotto per nome o marca"><label class="page-size-label">Mostra <select id="sellPageSize" class="page-size"><option>10</option><option selected>25</option><option>50</option><option>100</option><option value="all">Tutti</option></select></label></div>
+              <div id="sellProducts" class="product-grid"></div>
+            </div>
+            <div class="panel cart-panel">
+              <div class="panel-head"><div><h2>Carrello</h2><p id="cartMeta">0 articoli</p></div><button id="clearCartBtn" class="btn ghost">Svuota</button></div>
+              <div id="cartRows" class="cart-list"><div class="empty">Carrello vuoto.</div></div>
+              <div class="discount-box">
+                <label>Codice sconto<div class="inline"><input id="discountCode" placeholder="Codice"><button id="applyDiscountBtn" class="btn secondary">Applica</button></div></label>
+                <small id="discountInfo">Lo sconto extra parte sempre dal prezzo vendita già scontato del prodotto.</small><div id="discountChoices" class="discount-choices"></div>
+              </div>
+              <div class="cart-totals"><span>Subtotale <b id="cartSubtotal">€ 0,00</b></span><span>Sconto extra <b id="cartDiscount">€ 0,00</b></span><strong>Totale <b id="cartTotal">€ 0,00</b></strong></div>
+              <label>Pagamento<select id="paymentMethod"><option>Contanti</option><option>POS</option><option>Bonifico</option><option>Altro</option></select></label>
+              <button id="checkoutBtn" class="btn primary big">Conferma vendita</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="route-history" class="route">
+          <div class="panel"><div class="panel-head"><div><h2>Storico vendite</h2><p>Una riga per ordine, senza duplicazioni.</p></div><button id="openCancelledOrdersBtn" class="btn secondary">Ordini annullati / eliminati</button></div><div class="history-filters"><input id="historySearch" placeholder="Cerca ordine, prodotto o venditore"><input id="historyFrom" type="date" title="Da data"><input id="historyTo" type="date" title="A data"><select id="historyPayment"><option value="all">Tutti i pagamenti</option><option>Contanti</option><option>POS</option><option>Bonifico</option><option>Altro</option></select><select id="historyStatus"><option value="active">Completati</option><option value="cancelled">Annullati</option><option value="all">Tutti</option></select><label class="page-size-label">Mostra <select id="historyPageSize" class="page-size"><option>10</option><option selected>25</option><option>50</option><option>100</option><option value="all">Tutti</option></select></label></div><div class="table-wrap"><table><thead><tr><th>Data</th><th>Ordine</th><th>Prodotti</th><th>Venditore</th><th>Pagamento</th><th>Articoli</th><th>Totale</th><th>Azioni</th></tr></thead><tbody id="ordersTable"></tbody></table></div></div>
+        </section>
+
+
+        <section id="route-cancelled" class="route">
+          <div class="panel"><div class="panel-head"><div><h2>Ordini annullati / eliminati</h2><p>Registro annullamenti completi e parziali. Gli ordini completi possono essere ripristinati.</p></div><button id="backHistoryBtn" class="btn secondary">← Storico</button></div><div class="list-toolbar"><label class="page-size-label">Mostra <select id="cancelledPageSize" class="page-size"><option>10</option><option selected>25</option><option>50</option><option>100</option><option value="all">Tutti</option></select></label></div><div id="cancelledOrdersList" class="list"></div></div>
+        </section>
+
+        <section id="route-stock" class="route">
+          <div class="panel"><div class="panel-head"><div><h2>Magazzino</h2><p>Giacenze e movimenti in tempo reale.</p></div><div class="actions"><button id="openBulkStockBtn" class="btn secondary">Reset / Carico / Scarico</button><button id="openStockTransferBtn" class="btn secondary">Trasferisci</button><button id="openStockMoveBtn" class="btn primary">Carico / Scarico</button></div></div><div class="toolbar toolbar-search-filter"><input id="stockSearch" placeholder="Cerca prodotto"><select id="stockFilter"><option value="all">Tutti</option><option value="low">Scorte basse</option><option value="zero">Esauriti</option></select><label class="page-size-label">Mostra <select id="stockPageSize" class="page-size"><option>10</option><option selected>25</option><option>50</option><option>100</option><option value="all">Tutti</option></select></label></div><div class="warehouse-filter-box"><div class="warehouse-filter-title"><b>Magazzini visualizzati</b><span>Seleziona uno o più magazzini senza cambiare quello attivo in alto.</span></div><div id="stockWarehouseFilters" class="warehouse-filter-options"></div></div><div id="stockGrid" class="stock-grid"></div><div class="section-subhead"><h3>Movimenti recenti</h3><span>Realtime</span></div><div id="stockMovements" class="list"></div></div>
+        </section>
+
+        <section id="route-stock-move" class="route">
+          <div class="panel"><div class="panel-head"><div><h2>Carico / Scarico</h2><p>Scansiona un EAN-13 oppure scegli manualmente il prodotto.</p></div><button id="backStockBtn" class="btn secondary">← Magazzino</button></div><div id="stockMoveContent"></div></div>
+        </section>
+
+        <section id="route-stock-bulk" class="route">
+          <div class="panel bulk-stock-page-panel">
+            <div class="panel-head"><div><h2>Reset / Carico / Scarico</h2><p>Gestione massiva delle giacenze per magazzino.</p></div><button id="backBulkStockBtn" class="btn secondary">← Magazzino</button></div>
+            <div id="bulkStockPageContent"></div>
+          </div>
+        </section>
+
+        <section id="route-discounts" class="route">
+          <div class="panel"><div class="panel-head"><div><h2>Sconti</h2><p>Codici extra applicabili al carrello.</p></div><button id="addDiscountBtn" class="btn primary" data-perm="manageDiscounts">+ Codice</button></div><div class="list-toolbar"><label class="page-size-label">Mostra <select id="discountPageSize" class="page-size"><option>10</option><option selected>25</option><option>50</option><option>100</option><option value="all">Tutti</option></select></label></div><div id="discountList" class="list"></div></div>
+        </section>
+
+        <section id="route-employees" class="route">
+          <div class="panel"><div class="panel-head"><div><h2>Dipendenti</h2><p>Account, ruoli e permessi operativi.</p></div><button id="addEmployeeBtn" class="btn primary">+ Dipendente</button></div><div id="roleLegend" class="role-legend"></div><div class="list-toolbar"><label class="page-size-label">Mostra <select id="employeePageSize" class="page-size"><option>10</option><option selected>25</option><option>50</option><option>100</option><option value="all">Tutti</option></select></label></div><div id="employeesList" class="list"><div class="empty">Apri la sezione per caricare i dipendenti.</div></div></div>
+        </section>
+
+        <section id="route-employee-overview" class="route"><div id="employeeOverviewContent"></div></section>
+        <section id="route-roles" class="route"><div id="roleManagementContent"></div></section>
+
+        <section id="route-shifts" class="route">
+          <div class="panel"><div class="panel-head"><div><h2>Turni</h2><p>Turno corrente, ore lavorate e storico.</p></div></div><div class="list-toolbar"><label class="page-size-label">Mostra <select id="shiftPageSize" class="page-size"><option>10</option><option selected>25</option><option>50</option><option>100</option><option value="all">Tutti</option></select></label></div><div id="shiftsContent"></div></div>
+        </section>
+
+        <section id="route-closures" class="route">
+          <div class="panel"><div class="panel-head"><div><h2>Chiusure</h2><p>Riepiloghi giornalieri e gestione ordini integrati.</p></div><div class="actions"><button id="toggleDeletedClosures" class="btn secondary">Chiusure eliminate</button><button id="createClosureBtn" class="btn primary">Crea chiusura di oggi</button></div></div><div class="closure-toolbar"><input id="closureSearch" placeholder="Cerca data, ID o nota"><label class="page-size-label">Mostra <select id="closurePageSize" class="page-size"><option>10</option><option selected>25</option><option>50</option><option>100</option><option value="all">Tutti</option></select></label></div><div id="deletedClosuresPanel" class="deleted-closures-panel hidden"><div class="section-subhead"><h3>Chiusure eliminate</h3><span>Ripristinabili</span></div><div id="deletedClosures" class="list"></div></div><div id="closuresList" class="list"></div></div>
+        </section>
+
+        <section id="route-closure-detail" class="route"><div id="closureDetailContent"></div></section>
+
+        <section id="route-access" class="route">
+          <div class="panel"><div class="panel-head"><div><h2>Controllo accessi</h2><p>Ultimi accessi registrati.</p></div></div><div class="list-toolbar"><label class="page-size-label">Mostra <select id="accessPageSize" class="page-size"><option>10</option><option selected>25</option><option>50</option><option>100</option><option value="all">Tutti</option></select></label></div><div id="accessList" class="list"></div></div>
+        </section>
+
+
+        <section id="route-profile" class="route"><div id="profileContent"></div></section>
+        <section id="route-shopify" class="route"><div class="panel" style="padding:20px"><div class="panel-head"><div><h2>Shopify · Centro sincronizzazione</h2><p>Prodotti, abbinamenti, giacenze e stato della connessione</p></div></div><div id="shopifyDashboardSummary" class="shopify-dashboard-grid"></div><div class="settings-info-note" style="margin:12px 0"><span id="shopifyAutoSyncStatusText">Sincronizzazione automatica: verifica stato in corso…</span> <button type="button" class="btn" id="shopifyAutoSyncRefresh" style="margin-left:10px">Aggiorna stato</button> Noor LOCALE resta indipendente.</div><div id="shopifyWebhookLiveControls" class="settings-info-note" style="margin:12px 0"><b>Webhook Shopify live</b> · <button type="button" class="btn" id="shopifyWebhookCheck">Verifica webhook</button> <button type="button" class="btn" id="shopifyWebhookActivate" disabled>Registra webhook (Super Admin)</button><p id="shopifyWebhookLiveStatus" role="status">Verifica prima lo stato. La registrazione non modifica le giacenze.</p></div></div></section>
+        <section id="route-points-of-sale" class="route"><div class="panel" style="padding:20px"><div class="panel-head"><div><h2>Punti vendita</h2><p>Anagrafiche delle sedi con codici univoci NR-. Solo fase amministrativa: isolamento incassi ancora da completare.</p></div></div><div class="settings-info-note">Attenzione: non assegnare accessi reali a responsabili di sede prima della migrazione e delle regole Firebase definitive.</div><div class="actions noor-top-manage-actions"><button type="button" class="btn primary" id="addPointOfSale">+ Crea punto vendita</button><button type="button" class="btn secondary" id="toggleDeletedPointsOfSale">Punti vendita eliminati (0)</button></div><div id="settingsPointsOfSale"></div><div id="posCoverageAudit"></div><div id="posMigrationPanel"></div><div id="newManagementPeriod"></div></div></section>
+        <section id="route-warehouses" class="route"><div class="panel" style="padding:20px"><div class="panel-head"><div><h2>Magazzini</h2><p>Configurazione magazzini e copia iniziale dei prodotti.</p></div></div><div class="settings-info-note">La copia inizializza un nuovo magazzino e non trasferisce stock dal magazzino di origine. Non genera vendite o ordini Shopify.</div><div class="actions noor-top-manage-actions"><button type="button" id="openWarehouseWizard" class="btn primary">+ Crea magazzino</button><button type="button" id="toggleDeletedWarehouses" class="btn secondary">Magazzini eliminati <span id="deletedWarehouseCount"></span></button></div><div id="deletedWarehousesPanel" class="hidden noor-archived-warehouses"></div><div id="managedWarehouseList"></div><div id="warehouseWizard" style="margin-top:18px"></div></div></section>
+        <section id="route-settings" class="route">
+          <div class="panel settings-shell"><div class="panel-head"><div><h2>Impostazioni</h2><p>Apri solo la sezione che vuoi gestire.</p></div></div>
+            <form id="settingsForm" class="settings-accordion-form">
+              <details class="settings-fold"><summary><span class="settings-fold-icon">T</span><div><b>Titolo app e favicon</b><small>Nome visibile del gestionale e icona browser</small></div></summary><div class="settings-fold-body form-grid">
+                <label>Nome gestionale<input id="setAppName"></label><label>Sottotitolo<input id="setAppSubtitle"></label><label>Scritta build<input id="setBuildLabel" placeholder="Build test"></label><label>Numerazione versione<input id="setBuildVersion" placeholder="V2.5.4"></label><label class="full">Author<input id="setBuildAuthor" placeholder="Sony"></label>
+                <div class="branding-card full"><b>Favicon</b><div id="settingsFaviconPreview" class="settings-logo-preview favicon-preview"><span>★</span></div><input id="setFaviconFile" type="file" accept="image/*"><button id="removeFavicon" class="btn ghost" type="button">Rimuovi favicon</button></div>
+              </div></details>
+              <details class="settings-fold"><summary><span class="settings-fold-icon">⌂</span><div><b>Home</b><small>Box, valori e scorciatoie della dashboard</small></div></summary><div class="settings-fold-body form-grid">
+                <label class="check-setting"><input id="setShowStockValue" type="checkbox"> Mostra valore vendita stock</label><label class="check-setting"><input id="setShowCostValue" type="checkbox"> Mostra valore costo stock</label><label class="check-setting"><input id="setShowQuickActions" type="checkbox"> Mostra tasti rapidi</label>
+              </div></details>
+              <details class="settings-fold"><summary><span class="settings-fold-icon">▥</span><div><b>Gestione scontrino</b><small>IVA, testo finale e logo ricevuta</small></div></summary><div class="settings-fold-body form-grid"><label>IVA %<input id="setReceiptVatRate" type="number" min="0" max="100" step="0.01"></label><label>Larghezza carta<select id="setReceiptPaperPreset"><option value="50">50 mm</option><option value="60">60 mm</option><option value="80">80 mm</option><option value="100">100 mm</option><option value="custom">Personalizzata</option></select></label><label>Misura personalizzata mm<input id="setReceiptPaperCustom" type="number" min="35" max="140" step="1"></label><label class="full">Testo finale ricevuta<input id="setReceiptFooter"></label><div class="branding-card full"><b>Logo ricevuta</b><div id="settingsReceiptLogoPreview" class="settings-logo-preview"><span>N</span></div><input id="setReceiptLogoFile" type="file" accept="image/*"><button id="removeReceiptLogo" class="btn ghost" type="button">Rimuovi</button></div></div></details>
+              <details class="settings-fold"><summary><span class="settings-fold-icon">▤</span><div><b>Stampante termica</b><small>Collega la stampante di questo PC e prova la stampa automatica</small></div></summary><div class="settings-fold-body printer-settings-grid">
+                <div class="printer-local-note full"><b>Configurazione locale del dispositivo</b><span>Queste preferenze restano solo su questo PC: gli altri dispositivi non stamperanno automaticamente.</span></div>
+                <div class="printer-status-card full"><div><span>Stato collegamento</span><div id="printerConnectionStatus" class="printer-status offline"><i></i><span>QZ Tray non collegato</span></div></div><div class="actions"><button id="printerInstallQzBtn" type="button" class="btn ghost">Scarica QZ Tray</button><button id="printerConnectBtn" type="button" class="btn secondary">Collega QZ Tray</button><button id="printerDetectBtn" type="button" class="btn secondary">Rileva stampanti</button></div></div>
+                <label class="check-setting"><input id="setPrinterEnabled" type="checkbox"> Abilita stampante su questo dispositivo</label>
+                <label class="check-setting"><input id="setPrinterAutoPrint" type="checkbox"> Stampa automaticamente dopo vendita</label>
+                <label class="full">Stampante<select id="setPrinterName"><option value="">— Seleziona stampante —</option></select></label>
+                <div id="printerDetectedWrap" class="printer-detected-wrap full hidden"><div class="printer-detected-head"><div><b>Stampanti rilevate</b><small>Seleziona direttamente quella che vuoi usare su questo PC.</small></div><span id="printerDetectedCount" class="printer-count-badge">0</span></div><div id="printerDetectedList" class="printer-detected-list"></div></div>
+                <label>Modalità<select id="setPrinterMode"><option value="html">HTML / driver Windows</option><option value="raw">ESC/POS raw</option></select></label>
+                <label>Numero copie<input id="setPrinterCopies" type="number" min="1" max="5" value="1"></label>
+                <label class="check-setting"><input id="setPrinterCut" type="checkbox"> Taglio automatico (ESC/POS)</label>
+                <div class="full printer-help"><b>Prima configurazione</b><span>Installa QZ Tray sul PC cassa, avvialo, premi “Collega QZ Tray”, autorizza Noor quando richiesto e poi usa “Rileva stampanti”.</span></div>
+                <div class="full actions"><button id="printerTestBtn" type="button" class="btn primary">Stampa di prova</button></div>
+              </div></details>
+              <details class="settings-fold"><summary><span class="settings-fold-icon">◫</span><div><b>Gestione situazione veloce</b><small>Scorte e ordini visualizzati in Home</small></div></summary><div class="settings-fold-body form-grid">
+                <label>Soglia scorte basse<input id="setLowStock" type="number" min="0"></label><label>Scorte basse da mostrare<input id="setHomeLowStockLimit" type="number" min="1" max="30"></label><label>Ultimi ordini da mostrare<input id="setHomeLatestOrdersLimit" type="number" min="1" max="30"></label>
+                <label>Massimo quantità rossa<input id="setLowStockCriticalMax" type="number" min="0"></label><label>Massimo quantità gialla<input id="setLowStockWarningMax" type="number" min="0"></label><div></div>
+                <label>Colore rosso<input id="setLowStockColorCritical" type="color"></label><label>Colore giallo<input id="setLowStockColorWarning" type="color"></label><label>Colore verde<input id="setLowStockColorOk" type="color"></label>
+                <div class="full settings-quick-preview" id="settingsQuickPreview"></div>
+              </div></details>
+              <details class="settings-fold"><summary><span class="settings-fold-icon">♙</span><div><b>Gestione ruoli</b><small>Riepilogo permessi dei profili</small></div></summary><div class="settings-fold-body" id="settingsRoleLegend"></div></details><details class="settings-fold"><summary><span class="settings-fold-icon">◇</span><div><b>Liste prodotto</b><small>Gestisci singolarmente marca, formato, categoria e note</small></div></summary><div class="settings-fold-body settings-list-grid-v2">
+                <section class="settings-list-manager"><div class="settings-list-head"><div><b>Marche</b><small>Utilizzate nella tendina Marca.</small></div><div class="settings-list-actions"><button type="button" class="sort-mini" data-sort-setting-list="productBrands" data-dir="asc">A→Z</button><button type="button" class="sort-mini" data-sort-setting-list="productBrands" data-dir="desc">Z→A</button><button type="button" class="btn secondary compact-btn" data-add-setting-list="productBrands">+ Aggiungi marca</button></div></div><div id="listProductBrands" class="settings-item-list" data-sortable-list="productBrands"></div></section>
+                <section class="settings-list-manager"><div class="settings-list-head"><div><b>Formati</b><small>Es. 35 ml, 50 ml, 100 ml.</small></div><div class="settings-list-actions"><button type="button" class="sort-mini" data-sort-setting-list="productFormats" data-dir="asc">A→Z</button><button type="button" class="sort-mini" data-sort-setting-list="productFormats" data-dir="desc">Z→A</button><button type="button" class="btn secondary compact-btn" data-add-setting-list="productFormats">+ Aggiungi formato</button></div></div><div id="listProductFormats" class="settings-item-list" data-sortable-list="productFormats"></div></section>
+                <section class="settings-list-manager"><div class="settings-list-head"><div><b>Categorie</b><small>Categorie ricercabili nel gestionale.</small></div><div class="settings-list-actions"><button type="button" class="sort-mini" data-sort-setting-list="productCategories" data-dir="asc">A→Z</button><button type="button" class="sort-mini" data-sort-setting-list="productCategories" data-dir="desc">Z→A</button><button type="button" class="btn secondary compact-btn" data-add-setting-list="productCategories">+ Aggiungi categoria</button></div></div><div id="listProductCategories" class="settings-item-list" data-sortable-list="productCategories"></div></section>
+                <section class="settings-list-manager note-family-manager"><div class="settings-list-head"><div><b>Note</b><small>Elenco unico disponibile nelle note di testa, cuore e fondo di ogni prodotto.</small></div><div class="settings-list-actions"><button type="button" class="sort-mini" data-sort-setting-list="productNotes" data-dir="asc">A→Z</button><button type="button" class="sort-mini" data-sort-setting-list="productNotes" data-dir="desc">Z→A</button><button type="button" class="btn secondary compact-btn" data-add-setting-list="productNotes">+ Aggiungi nota</button></div></div><div id="listProductNotes" class="settings-item-list collapsible-settings-list" data-sortable-list="productNotes"></div></section>
+              </div></details>
+              <details class="settings-fold"><summary><span class="settings-fold-icon">N</span><div><b>Azienda e branding</b><small>Dati azienda e loghi del gestionale</small></div></summary><div class="settings-fold-body form-grid">
+                <label>Ragione sociale<input id="setCompanyName"></label><label>Telefono<input id="setCompanyPhone"></label><label>Email<input id="setCompanyEmail" type="email"></label><label>Partita IVA<input id="setCompanyVat"></label>
+                <div class="full branding-grid"><div class="branding-card"><b>Logo gestionale</b><div id="settingsLogoPreview" class="settings-logo-preview"><span>N</span></div><input id="setAppLogoFile" type="file" accept="image/*"><button id="removeAppLogo" class="btn ghost" type="button">Rimuovi</button></div><div class="branding-card"><b>Logo pagina accesso</b><div id="settingsLoginLogoPreview" class="settings-logo-preview"><span>N</span></div><input id="setLoginLogoFile" type="file" accept="image/*"><button id="removeLoginLogo" class="btn ghost" type="button">Rimuovi</button></div></div>
+              </div></details>
+              <div class="settings-save-bar"><button class="btn primary" type="submit">Salva impostazioni</button></div>
+            </form>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="modal" class="modal hidden"><div class="modal-card"><div class="modal-head"><div><h2 id="modalTitle">Dettaglio</h2><p id="modalSub"></p></div><button id="modalClose" class="icon-btn">×</button></div><div id="modalBody"></div></div></div>
+  <div id="toast" class="toast"></div>
+  <div id="receiptPrint" class="print-area"></div>
+
+  <script>
+(function(){
+  const overlay=document.getElementById('loginInfoOverlay'),openBtn=document.getElementById('loginAccessInfo'),closeBtn=document.getElementById('loginInfoClose');
+  const openInfo=function(ev){if(ev){ev.preventDefault();ev.stopPropagation()}if(overlay){overlay.classList.remove('hidden');document.body.classList.add('login-info-open')}};
+  const closeInfo=function(ev){if(ev){ev.preventDefault();ev.stopPropagation()}if(overlay){overlay.classList.add('hidden');document.body.classList.remove('login-info-open')}};
+  if(openBtn){openBtn.addEventListener('pointerdown',openInfo,{capture:true});openBtn.addEventListener('click',openInfo,{capture:true})}
+  if(closeBtn)closeBtn.addEventListener('click',closeInfo);
+  if(overlay)overlay.addEventListener('click',function(ev){if(ev.target===overlay)closeInfo(ev)});
+})();
+</script>
+<!-- Firebase browser import map, prima dell'avvio dei moduli NOOR -->
+<script type="importmap">
+{
+  "imports": {
+    "firebase/app": "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js",
+    "firebase/auth": "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js",
+    "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js",
+    "firebase/storage": "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js"
+  }
+}
+</script>
+<script type="module" src="/assets/js/app.js?v=2.5.85-staging-profile-fix2"></script>
+<script>try{const x=JSON.parse(localStorage.getItem('noor_v2_identity')||'{}');const src='/assets/icons/logo-noor-horizontal.png';const b=document.getElementById('bootLogo');if(b)b.innerHTML='<img src="'+String(src).replace(/"/g,'&quot;')+'" alt="Noor Splendori">'}catch(e){}</script>
+</body>
+</html>

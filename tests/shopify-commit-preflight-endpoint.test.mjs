@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import test from 'node:test';
+const file=new URL('../netlify/functions/shopify-commit-preflight-endpoint.mjs',import.meta.url);
+const source=readFileSync(file,'utf8');
+test('registered explicit HTTP path',()=>assert.match(source,/path:'\/api\/shopify\/commit-preflight'/));
+test('guard handles authorization and product checks',()=>assert.match(source,/await guard\(req\)/));
+test('no Firestore writes in wrapper',()=>assert.doesNotMatch(source,/batchWrite|runTransaction|method:'PATCH'|documents:commit/));
+test('no write enablement',()=>assert.match(source,/writeAllowed:false/));
+test('only POST accepted',()=>assert.match(source,/req.method!=='POST'/));

@@ -1,0 +1,17 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {assessIncomingInventoryEvent as assess} from '../netlify/functions/shopify-inventory-decision.mjs';
+const good=()=>({event:{inventoryItemId:'101',locationId:'201',available:4,updatedAt:'2026-10-10T20:00:00Z'},configuration:{shopifyLocationId:'201',onlineWarehouseId:'online'},matches:[{shopifyInventoryItemId:'101',warehouseId:'online',active:true}],onlineSnapshot:{warehouseId:'online',quantity:5,revision:3,updatedAt:'2026-10-10T19:00:00Z'}});
+const check=(code,mutate)=>{const x=good();mutate?.(x);const y=assess(x);assert.equal(y.code,code);assert.equal(y.inventoryWritesEnabled,false)};
+test('fresh disagreement requires reconciliation, never automatic overwrite',()=>check('needs_fresh_shopify_and_noor_reconciliation'));
+test('wrong Shopify location refused',()=>check('location_not_allowed',x=>x.event.locationId='999'));
+test('missing configured location refused',()=>check('location_not_allowed',x=>x.configuration.shopifyLocationId=''));
+test('ambiguous mapping refused',()=>check('unresolved_product_mapping',x=>x.matches.push({...x.matches[0]})));
+test('deleted product refused',()=>check('unresolved_product_mapping',x=>x.matches[0].deleted=true));
+test('LOCALE warehouse refused',()=>check('warehouse_not_online',x=>x.matches[0].warehouseId='locale'));
+test('stale event refused',()=>check('stale_event_needs_reconciliation',x=>x.event.updatedAt='2026-10-10T18:00:00Z'));
+test('concurrent event refused',()=>check('concurrent_change_needs_reconciliation',x=>x.event.updatedAt=x.onlineSnapshot.updatedAt));
+test('already aligned needs no update',()=>check('already_aligned',x=>x.event.available=5));
+test('invalid quantity refused',()=>check('invalid_inventory_value',x=>x.event.available=-1));
+test('invalid snapshot refused',()=>check('invalid_online_snapshot',x=>x.onlineSnapshot.revision=-1));
+test('missing snapshot refused',()=>check('invalid_input',x=>x.onlineSnapshot=null));

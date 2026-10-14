@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {inManagementPeriod,isLegacyRecord} from '../assets/js/management-period.mjs';
+const s={managementPeriodStartAt:'2026-10-14T00:00:00.000Z'};
+assert.equal(inManagementPeriod({createdAtClient:'2026-10-13T23:59:00Z'},s),false);
+assert.equal(inManagementPeriod({createdAtClient:'2026-10-14T00:01:00Z'},s),true);
+assert.equal(isLegacyRecord({date:'2026-10-01'},s),true);
+assert.equal(isLegacyRecord({date:'2026-10-15'},s),false);
+assert.equal(isLegacyRecord({id:'old-no-date'},s),true);
+assert.equal(inManagementPeriod({id:'old-no-date'},{}),true);
+console.log('management-period: 6 assertions OK');

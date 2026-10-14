@@ -1,0 +1,16 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {validateSaleInput,priceAndDecrement,SaleError} from '../netlify/functions/noor-sale-core.mjs';
+const settings={pointsOfSale:[{id:'NR-001',warehouseId:'theoria',active:true},{id:'NR-002',warehouseId:'latinfiexpo',active:true}],warehouses:[{id:'theoria',name:'THEORIA',active:true},{id:'latinfiexpo',name:'LATINFIEXPO',active:true},{id:'online',name:'NOOR ONLINE',active:true}]};
+const payload={saleId:'sale_test_001',pointOfSaleId:'NR-001',payment:'cash',items:[{productId:'a',warehouseId:'theoria',qty:2}]};
+const manager={role:'manager',active:true,pointOfSaleId:'NR-001'};
+test('manager may sell from own warehouse',()=>assert.equal(validateSaleInput(payload,manager,settings).pointOfSaleId,'NR-001'));
+test('manager cannot change site',()=>assert.throws(()=>validateSaleInput({...payload,pointOfSaleId:'NR-002'},manager,settings),SaleError));
+test('manager cannot use other shop warehouse',()=>assert.throws(()=>validateSaleInput({...payload,items:[{productId:'a',warehouseId:'latinfiexpo',qty:1}]},manager,settings),SaleError));
+test('manager cannot use ONLINE without explicit flag',()=>assert.throws(()=>validateSaleInput({...payload,items:[{productId:'a',warehouseId:'online',qty:1}]},manager,settings),SaleError));
+test('ONLINE is allowed only with explicit flag',()=>assert.equal(validateSaleInput({...payload,items:[{productId:'a',warehouseId:'online',qty:1}]},{...manager,sellOnline:true},settings).items[0].warehouseId,'online'));
+test('reject fractional and negative quantity',()=>{for(const qty of [0,-1,1.5,NaN])assert.throws(()=>validateSaleInput({...payload,items:[{productId:'a',qty,warehouseId:'theoria'}]},manager,settings),SaleError)});
+test('reject nonexisting or inactive site',()=>assert.throws(()=>validateSaleInput(payload,manager,{...settings,pointsOfSale:[]}),SaleError));
+test('reject client discounts by ignoring price',()=>{const d=priceAndDecrement({price:20,inventoryByWarehouse:{theoria:{qty:5,price:15}}},'theoria',2,'theoria');assert.equal(d.lineTotalCents,3000);assert.equal(d.patch.qty,3)});
+test('reject insufficient stock',()=>assert.throws(()=>priceAndDecrement({inventoryByWarehouse:{theoria:{qty:1,price:2}}},'theoria',2,'theoria'),SaleError));
+test('secondary warehouse does not change primary total fields',()=>assert.equal(Object.hasOwn(priceAndDecrement({inventoryByWarehouse:{online:{qty:5,price:9}}},'online',1,'theoria').patch,'qty'),false));

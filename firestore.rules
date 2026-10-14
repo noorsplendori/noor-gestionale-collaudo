@@ -1,0 +1,197 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function me() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function activeUser() {
+      return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && me().data.get('active', true) != false;
+    }
+
+    function myRole() {
+      return activeUser() ? me().data.get('role', 'seller') : 'anonymous';
+    }
+
+    function isOwner() {
+      return myRole() == 'owner' || myRole() == 'superadmin' || myRole() == 'super-admin';
+    }
+
+    function isAllAccessRole() {
+      return isOwner() || myRole() == 'admin';
+    }
+
+    function roleDefaults(permission) {
+      return isAllAccessRole()
+        || (myRole() == 'manager' && permission in ['sell','viewProducts','viewStock','viewDiscounts','viewOrders','cancelOrders','editPayment','createClosure','editClosure','viewRevenue'])
+        || (myRole() == 'supervisor' && permission in ['sell','viewProducts','viewStock','viewDiscounts','viewOrders','cancelOrders','editPayment','createClosure','editClosure','viewRevenue'])
+        || (myRole() == 'seller' && permission in ['sell','viewProducts','viewStock','viewDiscounts','viewOrders','createClosure','viewRevenue']);
+    }
+
+    function roleConfigured(permission) {
+      let settings = get(/databases/$(database)/documents/settings/global).data;
+      let allRoles = settings.get('rolePermissions', {});
+      let thisRole = allRoles.get(myRole(), {});
+      return thisRole.get(permission, roleDefaults(permission));
+    }
+
+    function can(permission) {
+      let overrides = me().data.get('permissionOverrides', {});
+      let legacy = me().data.get('extraPermissions', {});
+      return activeUser()
+        && !(myRole() == 'manager' && permission in ['settings','manageEmployees','manageProducts','manageDiscounts','viewAccessLogs'])
+        && (isOwner() || overrides.get(permission, legacy.get(permission, roleConfigured(permission))));
+    }
+
+    function protectedRole(roleName) {
+      return roleName == 'owner' || roleName == 'superadmin' || roleName == 'super-admin';
+    }
+
+    function targetProtected() {
+      return protectedRole(resource.data.get('role', 'seller'));
+    }
+
+    function requestedProtected() {
+      return protectedRole(request.resource.data.get('role', 'seller'));
+    }
+
+    function onlyInventoryFieldsChanged() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+        'inventoryByWarehouse','qty','stock','quantity',
+        'updatedAt','updatedAtClient','updatedBy'
+      ]);
+    }
+
+    match /users/{uid} {
+      allow read: if activeUser() && (request.auth.uid == uid || can('manageEmployees'));
+      allow create: if can('manageEmployees') && (!requestedProtected() || isOwner());
+      allow update: if activeUser() && (
+        (request.auth.uid == uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','firstName','lastName','photo','avatar','phone','updatedAt','updatedAtClient']))
+        || (can('manageEmployees') && (!targetProtected() || isOwner()) && (!requestedProtected() || isOwner()))
+      );
+      allow delete: if can('manageEmployees') && request.auth.uid != uid && (!targetProtected() || isOwner());
+    }
+
+    // managementPeriodStartAt non puo essere cambiato da ruoli amministrativi ordinari.
+    // Dopo la prima attivazione non e' consentito sostituirlo o cancellarlo.
+    function periodFields() {
+      return ['managementPeriodStartAt','managementPeriodActivatedBy','managementPeriodActivatedAtClient'];
+    }
+    function periodProtectedUpdate() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(periodFields())
+        || (isOwner()
+          && !resource.data.keys().hasAny(['managementPeriodStartAt'])
+          && request.resource.data.get('managementPeriodStartAt', '') is string
+          && request.resource.data.get('managementPeriodActivatedBy', '') == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasAll(periodFields()));
+    }
+    match /settings/{docId} {
+      allow read: if activeUser();
+      allow create: if centralReporting() && can('settings') && (docId != 'global' || !request.resource.data.keys().hasAny(periodFields()));
+      allow update: if centralReporting() && can('settings') && (docId != 'global' || periodProtectedUpdate());
+      allow delete: if centralReporting() && can('settings') && (docId != 'global' || !resource.data.keys().hasAny(['managementPeriodStartAt']));
+    }
+
+    // Fase 22: guardia server-side sugli storici precedenti al nuovo periodo.
+    // Se il periodo non e' attivo, il gestionale mantiene il comportamento corrente.
+    // I record senza data affidabile sono considerati storici per sicurezza.
+    function orderInActivePeriod() {
+      let period = get(/databases/$(database)/documents/settings/global).data.get('managementPeriodStartAt', '');
+      return period == '' || (
+        resource.data.get('createdAtClient', '') is string
+        && resource.data.get('createdAtClient', '') >= period
+      );
+    }
+
+    match /products/{productId} {
+      allow read: if can('viewProducts') || can('viewStock') || can('sell');
+      allow create, delete: if can('manageProducts');
+      // Solo la gestione prodotti autorizza scritture client di stock.
+      // Le future vendite dei venditori richiedono un endpoint server verificato.
+      allow update: if can('manageProducts');
+    }
+
+    // Fase 20: isolamento economico anche lato database (non soltanto UI).
+    // I documenti privi di pointOfSaleId sono accessibili solo al centro.
+    function centralReporting() {
+      return isOwner() || myRole() == 'admin';
+    }
+    function myPointOfSale() {
+      return activeUser() ? me().data.get('pointOfSaleId', '') : '';
+    }
+    function readOwnPointOfSale() {
+      return activeUser() && myPointOfSale() != ''
+        && resource.data.get('pointOfSaleId', '') == myPointOfSale();
+    }
+    // STAGING: la lettura Manager non deve dipendere da rolePermissions
+    // o dalle impostazioni globali. La sede resta verificata dal server.
+    function managerReadsOwnSite() {
+      return activeUser() && myRole() == 'manager' && readOwnPointOfSale();
+    }
+    function createOwnPointOfSale() {
+      return activeUser() && myPointOfSale() != ''
+        && request.resource.data.get('pointOfSaleId', '') == myPointOfSale();
+    }
+
+    match /orders/{orderId} {
+      allow read: if managerReadsOwnSite() || ((can('viewOrders') || can('sell') || can('createClosure') || can('editClosure')) && (centralReporting() || readOwnPointOfSale()));
+      allow create: if can('sell') && can('manageProducts') && (centralReporting() || createOwnPointOfSale());
+      allow update: if myRole() != 'manager' && orderInActivePeriod() && (can('cancelOrders') || can('editPayment') || can('editClosure')) && (centralReporting() || (readOwnPointOfSale() && request.resource.data.get('pointOfSaleId', '') == myPointOfSale()));
+      allow delete: if isOwner();
+    }
+
+    match /cancelledOrders/{recordId} {
+      allow read: if managerReadsOwnSite() || ((can('viewOrders') || can('cancelOrders')) && (centralReporting() || readOwnPointOfSale()));
+      allow create: if myRole() != 'manager' && can('cancelOrders') && (centralReporting() || createOwnPointOfSale());
+      allow update: if myRole() != 'manager' && can('cancelOrders') && (centralReporting() || (readOwnPointOfSale() && request.resource.data.get('pointOfSaleId', '') == myPointOfSale()));
+      allow delete: if myRole() != 'manager' && can('cancelOrders') && (centralReporting() || readOwnPointOfSale());
+    }
+
+    match /discounts/{discountId} {
+      allow read: if can('viewDiscounts') || can('sell');
+      allow create, update, delete: if can('manageDiscounts');
+    }
+
+    match /stockMovements/{movementId} {
+      allow read: if can('viewStock');
+      allow create: if can('manageProducts');
+      allow update, delete: if isOwner();
+    }
+
+    match /shifts/{shiftId} {
+      allow read: if activeUser() && (centralReporting() || readOwnPointOfSale());
+      allow create: if activeUser() && (centralReporting() || createOwnPointOfSale()) && (
+        request.resource.data.get('sellerUid', request.auth.uid) == request.auth.uid
+        || request.resource.data.get('employeeUid', request.auth.uid) == request.auth.uid
+        || can('manageEmployees')
+      );
+      allow update: if activeUser() && (centralReporting() || (readOwnPointOfSale() && request.resource.data.get('pointOfSaleId', '') == myPointOfSale())) && (
+        resource.data.get('sellerUid', '') == request.auth.uid
+        || resource.data.get('employeeUid', '') == request.auth.uid
+        || can('manageEmployees')
+      );
+      allow delete: if isOwner();
+    }
+
+    match /closures/{closureId} {
+      allow read: if managerReadsOwnSite() || ((can('createClosure') || can('editClosure') || can('viewRevenue')) && (centralReporting() || readOwnPointOfSale()));
+      allow create: if can('createClosure') && (centralReporting() || createOwnPointOfSale());
+      allow update: if (can('editClosure') || isOwner()) && (centralReporting() || (readOwnPointOfSale() && request.resource.data.get('pointOfSaleId', '') == myPointOfSale()));
+      allow delete: if isOwner();
+    }
+
+    match /accessLogs/{logId} {
+      allow create: if activeUser() && request.resource.data.get('uid', request.auth.uid) == request.auth.uid;
+      allow read: if can('viewAccessLogs');
+      allow update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,17 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {SaleError} from '../netlify/lib/noor-sale-core.mjs';
+import {authorizeFinance,validateRefund,validateCashMovement,summarizeLedger} from '../netlify/lib/noor-finance-core.mjs';
+const owner={role:'owner',active:true};
+const manager={role:'manager',active:true,pointOfSaleId:'NR-001'};
+const order={status:'completed',source:'noor-staging-backend',items:[{productId:'A',warehouseId:'theoria',qty:2,price:10}]};
+const request={operationId:'refund_test_123456',reason:'Reso articolo integro',refundMethod:'cash',items:[{productId:'A',warehouseId:'theoria',qty:1,restock:false}]};
+const denies=fn=>assert.throws(fn,e=>e instanceof SaleError && e.status>=400);
+test('manager reads only assigned store',()=>{assert.equal(authorizeFinance(manager,'NR-001').pointOfSaleId,'NR-001');denies(()=>authorizeFinance(manager,'NR-002'));});
+test('manager cannot refund or move cash',()=>{denies(()=>authorizeFinance(manager,'NR-001','refund'));denies(()=>authorizeFinance(manager,'NR-001','adjust'));assert.equal(authorizeFinance(owner,'NR-002','refund').central,true);});
+test('refund exactly one sale line',()=>{const r=validateRefund(request,order);assert.equal(r.amountCents,1000);});
+test('partial refunds cannot exceed sale',()=>{denies(()=>validateRefund({...request,items:[{...request.items[0],qty:2}]},order,[{status:'completed',items:[{productId:'A',warehouseId:'theoria',qty:1}]}]));});
+test('no auto restock',()=>denies(()=>validateRefund({...request,items:[{...request.items[0],restock:true}]},order)));
+test('no card refund without PSP confirmation',()=>denies(()=>validateRefund({...request,refundMethod:'card'},order)));
+test('cash movement integer cents',()=>{assert.equal(validateCashMovement({operationId:'cash_test_123456',pointOfSaleId:'NR-001',type:'cash_out',amountCents:345,reason:'Acquisto carta'}).amountCents,345);denies(()=>validateCashMovement({operationId:'cash_test_123456',pointOfSaleId:'NR-001',type:'cash_out',amountCents:3.45,reason:'Acquisto carta'}));});
+test('net money total',()=>assert.deepEqual(summarizeLedger([{status:'completed',total:10}],[{status:'completed',amountCents:300}],[{type:'cash_in',amountCents:100},{type:'cash_out',amountCents:200}]),{salesCents:1000,refundCents:300,cashInCents:100,cashOutCents:200,netCents:600}));

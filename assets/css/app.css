@@ -2928,3 +2928,21 @@ PY
 #settingsPointsOfSale #deletedPointsOfSalePanel h3{margin:0 0 16px}
 #settingsPointsOfSale #posNewSection{margin-top:24px!important}
 @media (max-width:720px){#settingsPointsOfSale .noor-pos-cards-grid{grid-template-columns:minmax(0,1fr);gap:16px}}
+
+/* Finanzia e resi STAGING */
+.noor-finance-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px;margin:18px 0}
+.noor-finance-tile{background:var(--surface,#f6f7fa);border:1px solid #dfe3ec;border-radius:14px;padding:16px}
+.noor-finance-tile strong{display:block;font-size:1.35rem;margin-top:7px}
+.noor-finance-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:16px 0}
+.noor-finance-form label{display:flex;flex-direction:column;gap:6px}
+.noor-finance-form label.wide{grid-column:1/-1}
+.noor-finance-form input,.noor-finance-form select{width:100%;min-height:39px;padding:7px;border:1px solid #ccd2dd;border-radius:9px}
+.noor-finance-note{margin-top:12px;padding:12px;border-radius:9px;background:#f3f5f9;white-space:pre-wrap}
+.noor-refund-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-bottom:1px solid #e2e5eb;padding:12px 0}
+.noor-refund-line input[type=number]{width:80px}
+/* NOOR STAGING - detailed monetary ledger */
+.noor-finance-ledger{margin-top:22px;overflow-x:auto}
+.noor-finance-ledger table{width:100%;border-collapse:collapse;min-width:550px}
+.noor-finance-ledger th,.noor-finance-ledger td{padding:10px 12px;text-align:left;border-bottom:1px solid #dfe3ec;font-size:.9rem}
+.noor-finance-ledger th{font-weight:700}
+.noor-refund-line small{display:block;color:var(--muted,#6b7280);margin-top:5px}

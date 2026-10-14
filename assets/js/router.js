@@ -17,6 +17,8 @@ const meta={
   'employee-overview':['Panoramica dipendente','Dati, rendimento, accessi e suggerimenti operativi.'],
   roles:['Gestione ruoli','Permessi predefiniti per ciascun ruolo.'],
   shifts:['Turni','Turno corrente e storico.'],
+  finance:['Contabilità','Movimenti di cassa e riepilogo per sede.'],
+  returns:['Resi e rimborsi','Rimborsi contabili controllati.'],
   closures:['Chiusure','Riepiloghi giornalieri.'],
   'closure-detail':['Dettaglio chiusura','Ordini integrati e reintegro.'],
   access:['Controllo accessi','Ultimi accessi registrati.'],
@@ -27,7 +29,7 @@ const meta={
   profile:['Il mio profilo','Dati personali e account.']
 };
 
-const routePerm={products:'viewProducts','low-stock':'viewStock','products-deleted':'manageProducts','product-detail':'viewProducts',sell:'sell',history:'viewOrders',stock:'viewStock','stock-move':'viewStock','stock-bulk':'viewStock',discounts:'viewDiscounts',employees:'manageEmployees','employee-overview':'manageEmployees',roles:'manageEmployees',closures:'createClosure','closure-detail':'createClosure',access:'viewAccessLogs',settings:'settings',shopify:'settings','points-of-sale':'settings',warehouses:'settings'};
+const routePerm={finance:'viewRevenue',returns:'viewOrders',products:'viewProducts','low-stock':'viewStock','products-deleted':'manageProducts','product-detail':'viewProducts',sell:'sell',history:'viewOrders',stock:'viewStock','stock-move':'viewStock','stock-bulk':'viewStock',discounts:'viewDiscounts',employees:'manageEmployees','employee-overview':'manageEmployees',roles:'manageEmployees',closures:'createClosure','closure-detail':'createClosure',access:'viewAccessLogs',settings:'settings',shopify:'settings','points-of-sale':'settings',warehouses:'settings'};
 
 const routePaths={
   home:'/',
@@ -46,6 +48,8 @@ const routePaths={
   'employee-overview':'/dipendenti/panoramica',
   roles:'/dipendenti/ruoli',
   shifts:'/turni',
+  finance:'/gestione-monetaria',
+  returns:'/resi-rimborsi',
   closures:'/chiusure',
   'closure-detail':'/chiusure/dettaglio',
   access:'/accessi',

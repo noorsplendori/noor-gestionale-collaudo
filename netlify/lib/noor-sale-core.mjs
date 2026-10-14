@@ -34,11 +34,11 @@ export function priceAndDecrement(product,warehouseId,qty,primaryWarehouseId) {
   if (!product || product.deleted===true)throw new SaleError(409,'Prodotto non disponibile.');
   const map = {...(product.inventoryByWarehouse || {})};
   const entry = map[warehouseId] || (warehouseId===primaryWarehouseId ? {qty:product.qty ?? product.stock ?? product.quantity ?? 0,price:product.price,finalPrice:product.finalPrice,discountActive:product.discountActive} : null);
-  if (!entry || entry.deleted===true)throw new SaleError(409,'Prodotto non presente nel magazzino.');
+  if (!entry || entry.deleted===true || entry.active===false)throw new SaleError(409,'Prodotto non presente nel magazzino.');
   const current=Number(entry.qty);
   if (!Number.isSafeInteger(current) || current < qty)throw new SaleError(409,'Giacenza insufficiente.');
   const price=Number(entry.discountActive && Number(entry.finalPrice)>0 ? entry.finalPrice : (entry.price ?? product.price));
-  if (!Number.isFinite(price) || price<0 || price>100000)throw new SaleError(409,'Prezzo prodotto non valido.');
+  if (!Number.isFinite(price) || price<0 || price>100000 || Math.round(price*100)/100!==price)throw new SaleError(409,'Prezzo prodotto non valido.');
   const after=current-qty;
   map[warehouseId]={...entry,qty:after};
   const patch={inventoryByWarehouse:map};

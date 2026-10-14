@@ -472,20 +472,16 @@ export async function saveOrder(order){
   if(!data.order||!data.saleId)throw new Error('Risposta backend incompleta: controlla lo Storico prima di riprovare.');
   return data.order;
 }
-export async function cancelOrder(order,reason='Annullamento completo'){
- if(String(state.profile?.role||'').toLowerCase()==='manager')throw new Error('Annullamenti e ripristini bloccati per i responsabili nello STAGING: attendere il percorso backend protetto.');
- if(isLegacyRecord(order,state.settings))throw new Error('Vendita del periodo precedente: annullamento operativo e reintegro scorte bloccati.');
- return afterOnlineCommitted(()=>cancelOrderOriginal(order,reason),wakeOrderWarehouses(order));
+// STAGING: backend orders are immutable until cancellation/restock is implemented
+// as a single audited server transaction. Never route them through legacy clients.
+export async function cancelOrder(){
+ throw new Error('STAGING: annullamento sospeso. Per evitare reintegri errati serve la transazione backend di storno.');
 }
-export async function partialCancelOrder(order,selections,reason='Annullamento parziale'){
- if(String(state.profile?.role||'').toLowerCase()==='manager')throw new Error('Annullamenti e ripristini bloccati per i responsabili nello STAGING: attendere il percorso backend protetto.');
- if(isLegacyRecord(order,state.settings))throw new Error('Vendita del periodo precedente: annullamento parziale e reintegro scorte bloccati.');
- return afterOnlineCommitted(()=>partialCancelOrderOriginal(order,selections,reason),wakeOrderWarehouses(order));
+export async function partialCancelOrder(){
+ throw new Error('STAGING: annullamento parziale sospeso fino al backend di storno.');
 }
-export async function restoreCancelledOrder(rec){
- if(String(state.profile?.role||'').toLowerCase()==='manager')throw new Error('Annullamenti e ripristini bloccati per i responsabili nello STAGING: attendere il percorso backend protetto.');
- if(isLegacyRecord(rec,state.settings))throw new Error('Operazione del vecchio periodo: ripristino magazzino bloccato.');
- return afterOnlineCommitted(()=>restoreCancelledOrderOriginal(rec),wakeOrderWarehouses(rec));
+export async function restoreCancelledOrder(){
+ throw new Error('STAGING: ripristino sospeso fino al backend di storno.');
 }
 
 // Product removal / restore affects sale availability, not just quantities.

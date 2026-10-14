@@ -71,6 +71,8 @@
         <button data-route="discounts"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M7.5 8a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM16.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"/></svg></span><b>Sconti</b></button>
         <button data-route="employees" data-perm="manageEmployees"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM2 21c0-4 3-7 7-7s7 3 7 7M17 8a3 3 0 1 0 0-6M17 14c3 0 5 2 5 5"/></svg></span><b>Dipendenti</b></button>
         <button data-route="shifts"><span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg></span><b>Turni</b></button>
+        <button data-route="finance"><span class="nav-icon">€</span><b>Contabilità</b></button>
+        <button data-route="returns"><span class="nav-icon">↩</span><b>Resi e rimborsi</b></button>
         <button data-route="closures"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M5 4h14v17H5zM8 2v4M16 2v4M8 10h8M8 14l2 2 5-5"/></svg></span><b>Chiusure</b></button>
         <button data-route="access" data-perm="viewAccessLogs"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 5 3 8 7 9 4-1 7-4 7-9V6zM9 12l2 2 4-5"/></svg></span><b>Accessi</b></button>
         <button data-route="shopify" data-perm="settings"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M5 7h14l-1 14H6L5 7zM9 9V6a3 3 0 0 1 6 0v3"/></svg></span><b>Shopify</b></button>
@@ -257,6 +259,18 @@
         <section id="route-closures" class="route">
           <div class="panel"><div class="panel-head"><div><h2>Chiusure</h2><p>Riepiloghi giornalieri e gestione ordini integrati.</p></div><div class="actions"><button id="toggleDeletedClosures" class="btn secondary">Chiusure eliminate</button><button id="createClosureBtn" class="btn primary">Crea chiusura di oggi</button></div></div><div class="closure-toolbar"><input id="closureSearch" placeholder="Cerca data, ID o nota"><label class="page-size-label">Mostra <select id="closurePageSize" class="page-size"><option>10</option><option selected>25</option><option>50</option><option>100</option><option value="all">Tutti</option></select></label></div><div id="deletedClosuresPanel" class="deleted-closures-panel hidden"><div class="section-subhead"><h3>Chiusure eliminate</h3><span>Ripristinabili</span></div><div id="deletedClosures" class="list"></div></div><div id="closuresList" class="list"></div></div>
         </section>
+
+
+        <section id="route-finance" class="route"><div class="panel" style="padding:20px">
+          <div class="panel-head"><div><h2>Contabilità · STAGING</h2><p>Riepilogo distinto per sede, operazioni registrate dal backend di collaudo.</p></div></div>
+          <div class="settings-info-note">Le operazioni sono disponibili solo sul Firebase di collaudo. Non vengono effettuati pagamenti verso banche o terminali POS.</div>
+          <div id="financeApp"></div>
+        </div></section>
+        <section id="route-returns" class="route"><div class="panel" style="padding:20px">
+          <div class="panel-head"><div><h2>Resi e rimborsi · STAGING</h2><p>Reso contabile di un ordine di prova, controllato dal backend.</p></div></div>
+          <div class="settings-info-note">Solo Owner/Admin. Rimborso contanti registrato contabilmente: non corrisponde all'effettiva consegna di denaro. Reintegro scorte, carta e buoni acquisto non sono disponibili.</div>
+          <div id="returnsApp"></div>
+        </div></section>
 
         <section id="route-closure-detail" class="route"><div id="closureDetailContent"></div></section>
 

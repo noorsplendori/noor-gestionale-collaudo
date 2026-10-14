@@ -457,7 +457,21 @@ export async function bulkUpdateStock(productIds,warehouseId,operation='reset',q
 export async function transferStock(productId,fromWarehouseId,toWarehouseId,qty,note='Trasferimento magazzino'){
  return afterOnlineCommitted(()=>transferStockOriginal(productId,fromWarehouseId,toWarehouseId,qty,note),[fromWarehouseId,toWarehouseId]);
 }
-export async function saveOrder(order){return afterOnlineCommitted(()=>saveOrderOriginal(order),wakeOrderWarehouses(order))}
+const STAGING_SALE_ENDPOINT='https://noor-gestionale-collaudo.netlify.app/.netlify/functions/noor-sale';
+export async function saveOrder(order){
+  if(!['localhost','127.0.0.1'].includes(location.hostname))throw new Error('Vendite STAGING consentite soltanto da localhost.');
+  if(!auth.currentUser)throw new Error('Accesso richiesto per registrare la vendita.');
+  if(!state.profile?.pointOfSaleId)throw new Error('Selezionare la sede autorizzata prima di vendere.');
+  const token=await auth.currentUser.getIdToken();
+  const request={saleId:String(order.id),pointOfSaleId:String(order.pointOfSaleId||state.profile.pointOfSaleId),items:(order.items||[]).map(i=>({productId:String(i.productId),warehouseId:String(i.warehouseId),qty:Number(i.qty)})),payment:String(order.payment||order.paymentMethod||'')};
+  let response;
+  try{response=await fetch(STAGING_SALE_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(request),cache:'no-store'});}
+  catch(e){throw new Error('Risposta vendita sconosciuta. Controlla lo Storico prima di riprovare: '+(e.message||'rete non disponibile'));}
+  let data={};try{data=await response.json()}catch{}
+  if(!response.ok||data.ok!==true)throw new Error(data.error||('Backend vendita non disponibile (HTTP '+response.status+').'));
+  if(!data.order||!data.saleId)throw new Error('Risposta backend incompleta: controlla lo Storico prima di riprovare.');
+  return data.order;
+}
 export async function cancelOrder(order,reason='Annullamento completo'){
  if(String(state.profile?.role||'').toLowerCase()==='manager')throw new Error('Annullamenti e ripristini bloccati per i responsabili nello STAGING: attendere il percorso backend protetto.');
  if(isLegacyRecord(order,state.settings))throw new Error('Vendita del periodo precedente: annullamento operativo e reintegro scorte bloccati.');

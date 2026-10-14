@@ -5,6 +5,6 @@ const firebase = readFileSync('assets/js/firebase.js','utf8');
 const fn = readFileSync('netlify/functions/noor-sale.mjs','utf8');
 const expected = 'noor-collaudo-2026';
 if (!config.includes(expected) || !firebase.includes('STAGING BLOCCATO') || !fn.includes("NOOR_STAGING_SALES_ENABLED")) throw Error('Blocco STAGING mancante.');
-if (!existsSync('netlify/functions/noor-sale-core.mjs')) throw Error('Backend incompleto.');
+if (!existsSync('netlify/lib/noor-sale-core.mjs')) throw Error('Backend incompleto.');
 execFileSync(process.execPath,['--test','tests/staging-sale-backend.test.mjs'],{stdio:'inherit'});
 console.log('BUILD STAGING: verifiche minime superate; operazioni di vendita disabilitate salvo abilitazione esplicita.');

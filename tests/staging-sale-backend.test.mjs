@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {validateSaleInput,priceAndDecrement,SaleError} from '../netlify/functions/noor-sale-core.mjs';
+import {validateSaleInput,priceAndDecrement,SaleError} from '../netlify/lib/noor-sale-core.mjs';
 const settings={pointsOfSale:[{id:'NR-001',warehouseId:'theoria',active:true},{id:'NR-002',warehouseId:'latinfiexpo',active:true}],warehouses:[{id:'theoria',name:'THEORIA',active:true},{id:'latinfiexpo',name:'LATINFIEXPO',active:true},{id:'online',name:'NOOR ONLINE',active:true}]};
 const payload={saleId:'sale_test_001',pointOfSaleId:'NR-001',payment:'cash',items:[{productId:'a',warehouseId:'theoria',qty:2}]};
 const manager={role:'manager',active:true,pointOfSaleId:'NR-001'};

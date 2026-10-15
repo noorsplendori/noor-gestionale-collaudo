@@ -28,7 +28,7 @@ export async function handler(event){
     const data=JSON.parse(event.body||'{}');
     const action=String(data.action||'');
     const site=String(data.pointOfSaleId||'');
-    authorizeFinance(profile,site,action==='refund'?'refund':['movement','reconcile'].includes(action)?'adjust':'read');
+    authorizeFinance(profile,site,action==='refund'?'refund':['movement','reconcile','reconcile-revise'].includes(action)?'adjust':'read');
     const config=await db.doc('settings/global').get();
     if(!config.exists||!(config.data().pointsOfSale||[]).some(p=>String(p.id)===site&&p.active!==false&&p.deleted!==true))throw new SaleError(403,'Sede inattiva o inesistente');
     const now=new Date().toISOString();
@@ -46,8 +46,11 @@ export async function handler(event){
       const entries=[
         ...refunds.map(d=>({kind:'refund',id:String(d.operationId||''),date:String(d.createdAtClient||''),amountCents:Number(d.amountCents||0),description:String(d.reason||'Reso').slice(0,150)})),
         ...movements.map(d=>({kind:d.type,id:String(d.operationId||''),date:String(d.createdAtClient||''),amountCents:Number(d.amountCents||0),description:String(d.reason||'Movimento').slice(0,150)}))
-      ].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,50);
-      return send(200,{ok:true,pointOfSaleId:site,periodStart:period,summary:summarizeLedger(list(o),refunds,movements),entries});
+      ].sort((a,b)=>b.date.localeCompare(a.date));
+      const requestedLimit=String(data.limit||'50');
+      if(!['50','100','all'].includes(requestedLimit))throw new SaleError(400,'Limite non valido');
+      const selected=entries.slice(0,requestedLimit==='all'?entries.length:Number(requestedLimit));
+      return send(200,{ok:true,pointOfSaleId:site,periodStart:period,summary:summarizeLedger(list(o),refunds,movements),entries:selected,totalEntries:entries.length});
     }
     if(action==='refund-status'){
       // Data is already constrained to the authenticated user's authorized location.
@@ -78,7 +81,34 @@ export async function handler(event){
     }
     if(action==='reconciliations'){
       const snap=await db.collection('noorReconciliations').where('pointOfSaleId','==',site).get();
-      return send(200,{ok:true,entries:snap.docs.map(d=>d.data()).sort((a,b)=>String(b.createdAtClient).localeCompare(String(a.createdAtClient))).slice(0,30)});
+      return send(200,{ok:true,entries:snap.docs.map(d=>d.data()).sort((a,b)=>String(b.updatedAtClient||b.createdAtClient).localeCompare(String(a.updatedAtClient||a.createdAtClient)))});
+    }
+    if(action==='reconcile-revise'){
+      const key=site+'__'+String(data.day||'');
+      if(!/^NR-\d{3}__\d{4}-\d{2}-\d{2}$/.test(key))throw new SaleError(400,'Sede o giornata non valida');
+      const note=String(data.note||'').trim();
+      if(note.length<8||note.length>500)throw new SaleError(400,'Motivo rettifica obbligatorio (8-500 caratteri)');
+      const counted=Number(data.countedCashCents);
+      if(!Number.isSafeInteger(counted)||counted<0||counted>100000000)throw new SaleError(400,'Contante rettificato non valido');
+      const operationId=String(data.operationId||'');
+      if(!/^[a-zA-Z0-9_-]{12,90}$/.test(operationId))throw new SaleError(400,'Operazione non valida');
+      const ref=db.doc('noorReconciliations/'+key);
+      const audit=db.doc('noorReconciliationRevisions/'+operationId);
+      const outcome=await db.runTransaction(async tx=>{
+        const [old,already]=await Promise.all([tx.get(ref),tx.get(audit)]);
+        if(already.exists)throw new SaleError(409,'Rettifica già registrata');
+        if(!old.exists||old.data().pointOfSaleId!==site)throw new SaleError(404,'Quadratura originale non trovata');
+        const previous=old.data();
+        const next={countedCashCents:counted,differenceCents:counted-Number(previous.expectedCashCents||0),note};
+        tx.create(audit,{operationId,pointOfSaleId:site,day:data.day,previousCountedCashCents:previous.countedCashCents,previousDifferenceCents:previous.differenceCents,previousNote:previous.note||'',...next,updatedByUid:verified.uid,createdAtClient:now,createdAt:admin.firestore.FieldValue.serverTimestamp()});
+        tx.update(ref,{...next,updatedByUid:verified.uid,updatedAtClient:now,revisionCount:Number(previous.revisionCount||0)+1});
+        return {...next,operationId};
+      });
+      return send(200,{ok:true,...outcome});
+    }
+    if(action==='reconciliation-revisions'){
+      const snap=await db.collection('noorReconciliationRevisions').where('pointOfSaleId','==',site).get();
+      return send(200,{ok:true,entries:snap.docs.map(d=>d.data()).sort((a,b)=>String(b.createdAtClient).localeCompare(String(a.createdAtClient)))});
     }
     if(action==='reconcile'){
       // Snapshot indicativo: i dati non sono una chiusura fiscale e possono cambiare con nuove vendite.

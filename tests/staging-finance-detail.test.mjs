@@ -6,8 +6,8 @@ const ui=readFileSync('assets/js/finance-ui.js','utf8');
 test('ledger details remain scoped by the server-side site equality queries',()=>{
  assert.match(server,/collection\('noorRefunds'\)\.where\('pointOfSaleId','==',site\)/);
  assert.match(server,/collection\('noorCashMovements'\)\.where\('pointOfSaleId','==',site\)/);
- assert.match(server,/entries\}\)/);
- assert.match(server,/\.slice\(0,50\)/);
+ assert.match(server,/entries:selected,totalEntries:entries.length/);
+ assert.match(server,/requestedLimit==='all'/);
 });
 test('refund preview scoped to order site and central role',()=>{
  assert.match(server,/action==='refund-preview'/);
@@ -19,5 +19,5 @@ test('frontend blocks refund when preview fails and never reinstates stock',()=>
  assert.match(ui,/request\('refund-preview'/);
  assert.match(ui,/btn\.disabled=true/);
  assert.match(ui,/restock:false/);
- assert.match(ui,/renderEntries\(d\.entries\|\|\[\]\)/);
+ assert.match(ui,/currentEntries=d.entries\|\|\[\]/);
 });

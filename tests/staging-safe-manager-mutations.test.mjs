@@ -13,11 +13,19 @@ test('manager cannot modify orders or cancelledOrders even with override',()=>{
  assert.match(rules,/allow update: if myRole\(\) != 'manager' && can\('cancelOrders'\)/);
  assert.match(rules,/allow delete: if myRole\(\) != 'manager' && can\('cancelOrders'\)/);
 });
-test('client blocks all stock-affecting cancellation until backend storno exists',()=>{
- for(const name of ['cancelOrder','partialCancelOrder','restoreCancelledOrder']){
-  const start=store.indexOf('export async function '+name+'(');
-  assert.notEqual(start,-1);
-  assert.match(store.slice(start,start+250),/throw new Error\('STAGING: /);
+test('storno completo riservato al backend e annullamenti parziali bloccati',()=>{
+ const start=store.indexOf('export async function cancelOrder(order)');
+ assert.ok(start>=0);
+ const full=store.slice(start,store.indexOf('export async function partialCancelOrder',start));
+ assert.match(full,/STAGING_CANCEL_ENDPOINT/);
+ assert.match(full,/auth\.currentUser\.getIdToken/);
+ assert.match(full,/noor-staging-backend/);
+ assert.match(full,/\['owner','admin','superadmin','super-admin'\]/);
+ assert.match(full,/method:'POST'/);
+ for(const name of ['partialCancelOrder','restoreCancelledOrder']){
+  const index=store.indexOf('export async function '+name+'(');
+  assert.ok(index>=0);
+  assert.match(store.slice(index,index+160),/throw new Error/);
  }
 });
 test('seller order creation remains blocked without manageProducts',()=>{

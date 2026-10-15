@@ -5,10 +5,14 @@
   "type": "module",
   "scripts": {
     "test:backend": "node --test tests/staging-sale-backend.test.mjs",
-    "build": "node scripts/verify-staging.mjs"
+    "build": "node scripts/verify-staging.mjs",
+    "test:staging": "node scripts/test-staging.mjs",
+    "preflight:rilascio": "node scripts/preflight-rilascio.mjs"
   },
   "dependencies": {
     "firebase-admin": "^13.4.0"
   },
-  "engines": {"node": ">=20"}
+  "engines": {
+    "node": ">=20"
+  }
 }

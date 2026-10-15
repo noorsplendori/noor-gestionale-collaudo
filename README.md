@@ -1,18 +1,33 @@
-# NOOR V2.5.85 – STAGING Contabilità e Resi
+# NOOR V2.5.85 — Pacchetto unico di accettazione STAGING
 
-Progetto completo esclusivamente per collaudo. Firebase: `noor-collaudo-2026`. Netlify: `noor-gestionale-collaudo`. Non caricare nel repository della produzione.
+Questa versione raccoglie la cassa backend, la separazione per sede, Contabilità, resi contabili, quadratura contanti, codici ordine abbreviati e le relative prove automatiche. **Non è ancora il rilascio da usare in produzione.**
 
-## Aggiornamento
-- Contabilità: riepilogo per sede più registro degli ultimi 50 movimenti di cassa e resi, con data, tipo, causale e importo.
-- Resi: richiesta di anteprima backend delle quantità già rese e ancora rendibili, prima di consentire la conferma. Il controllo definitivo rimane nel backend durante la transazione.
-- Resi contabili solo in contanti: nessuna esecuzione di rimborso esterno e nessun reintegro automatico di magazzino.
-- Nessun cambiamento alle funzioni Shopify o alle regole Firestore.
+## Verifiche in un solo passaggio
 
-## Deploy e collaudo
-Le schermate possono essere verificate in locale su localhost:5501. Le nuove chiamate server (`refund-preview` e dettaglio del riepilogo) richiedono il deploy del repository STAGING su Netlify. Per provarle operativamente, `NOOR_STAGING_FINANCE_ENABLED` deve essere impostata a `true` **solo dopo il controllo dell'ambiente STAGING e delle credenziali**, e deve essere rimessa a `false` alla fine dei test. Mantieni invariati i valori delle variabili delle vendite già verificate.
+Dalla root del progetto: `npm run preflight:rilascio`. Il comando verifica build, test STAGING, isolamento dal Firebase reale e segnala automaticamente le condizioni che impediscono la pubblicazione in produzione. Un codice di uscita 3 indica che i test STAGING sono superati ma restano funzioni bloccanti; non significa che il pacchetto sia corrotto.
 
-L'interfaccia è volutamente limitata a localhost: non usarla come frontend pubblico.
+Per l'ultima tornata di test reali utilizzare SOLO il repository privato `noor-gestionale-collaudo`, Netlify STAGING e il progetto Firebase `noor-collaudo-2026`. Non caricare qui credenziali server. Non copiare credenziali Shopify e non cambiare `firestore.rules` nel progetto reale.
 
-Test consigliati: eseguire `node --test tests/staging-finance.test.mjs tests/staging-finance-ui.test.mjs tests/staging-finance-detail.test.mjs` e `npm run build`.
+### Unica sessione di collaudo applicativo
 
-Non pronto per produzione: mancano emissione di buoni, rimborsi sui provider di pagamento, riconciliazione contanti/POS, chiusure di cassa definitive e test integrativi Firebase.
+1. Owner: ordine fittizio in THEORIA, controllare scorta e ricevuta con codice breve.
+2. Manager THEORIA/LATINFIEXPO: verifica delle letture proprie e assenza dei dati dell'altra sede; controllare anche dinieghi Firestore per richieste dirette.
+3. Contabilità: riepiloghi separati, singolo movimento di cassa, quadratura indicativa e impossibilità di duplicarne una per la stessa giornata.
+4. Resi: dettagli ordine, ricerca, reso parziale/totale contabile, badge e rifiuto del doppio reso; verificare che NON avvenga reintegro automatico.
+5. NOOR ONLINE: richiede test autorizzazioni e riconciliazione con Shopify in ambiente dedicato prima della produzione.
+6. Nuovo periodo: non attivare sul Firebase reale e non cancellare storici; la piena attivazione sicura resta un requisito aperto.
+
+Non ripetere operazioni in caso di errore ambiguo: verificare prima che non siano già state salvate.
+
+## Bloccanti per il rilascio di produzione
+
+- Backend per annullamenti/ripristini con stock e audit atomici non ancora completo.
+- Buoni acquisto e rimborsi elettronici automatici non operativi; il modulo attuale registra esclusivamente resi contabili contanti supportati.
+- Chiusure fiscali definitive non implementate: la quadratura di prova è solo informativa.
+- Attivazione del nuovo periodo economico e protezione completa degli storici da collaudare.
+- Verifica completa delle regole Firestore con utenti reali di sedi differenti, e allineamento del codice alla V2.5.84 che contiene le Functions Shopify reali.
+- La configurazione web e server attuale è intenzionalmente limitata a STAGING: non sostituirla alla produzione.
+
+### Aggiornamenti
+
+Per il solo test finale STAGING caricare **tutti** i file di questo ZIP nella root del repository `noor-gestionale-collaudo`, attendere Netlify, poi utilizzare `localhost:5501` per il frontend. `firestore.rules`: non aggiornare per questo pacchetto. Per la produzione: nessun file da pubblicare finché i bloccanti non sono risolti.

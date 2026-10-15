@@ -1,6 +1,6 @@
 // STAGING ONLY. Protected financial endpoints; no external payment-provider refunds.
 import {SaleError} from '../lib/noor-sale-core.mjs';
-import {authorizeFinance,validateRefund,validateCashMovement,summarizeLedger} from '../lib/noor-finance-core.mjs';
+import {authorizeFinance,validateRefund,validateCashMovement,validateCashReconciliation,summarizeLedger} from '../lib/noor-finance-core.mjs';
 const ORIGIN=/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 const response=(code,body,origin='')=>({statusCode:code,headers:{'content-type':'application/json','cache-control':'no-store',...(ORIGIN.test(origin)?{'access-control-allow-origin':origin,'access-control-allow-headers':'Authorization, Content-Type','access-control-allow-methods':'POST, OPTIONS','vary':'Origin'}:{})},body:JSON.stringify(body)});
 export async function handler(event){
@@ -28,7 +28,7 @@ export async function handler(event){
     const data=JSON.parse(event.body||'{}');
     const action=String(data.action||'');
     const site=String(data.pointOfSaleId||'');
-    authorizeFinance(profile,site,action==='refund'?'refund':action==='movement'?'adjust':'read');
+    authorizeFinance(profile,site,action==='refund'?'refund':['movement','reconcile'].includes(action)?'adjust':'read');
     const config=await db.doc('settings/global').get();
     if(!config.exists||!(config.data().pointsOfSale||[]).some(p=>String(p.id)===site&&p.active!==false&&p.deleted!==true))throw new SaleError(403,'Sede inattiva o inesistente');
     const now=new Date().toISOString();
@@ -49,6 +49,17 @@ export async function handler(event){
       ].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,50);
       return send(200,{ok:true,pointOfSaleId:site,periodStart:period,summary:summarizeLedger(list(o),refunds,movements),entries});
     }
+    if(action==='refund-status'){
+      // Data is already constrained to the authenticated user's authorized location.
+      const snap=await db.collection('noorRefunds').where('pointOfSaleId','==',site).get();
+      const orders={};
+      for(const doc of snap.docs){const d=doc.data();if(d.status!=='completed'||!d.orderId)continue;
+        const id=String(d.orderId);const returned=(d.items||[]).reduce((n,i)=>n+Number(i.qty||0),0);
+        if(!Number.isSafeInteger(returned)||returned<0)continue;
+        orders[id]={returned:(orders[id]?.returned||0)+returned};
+      }
+      return send(200,{ok:true,orders});
+    }
     if(action==='refund-preview'){
       authorizeFinance(profile,site,'refund');
       if(!/^[a-zA-Z0-9_-]{12,90}$/.test(String(data.orderId||'')))throw new SaleError(400,'ID ordine non valido');
@@ -64,6 +75,42 @@ export async function handler(event){
       for(const doc of prior.docs){const d=doc.data();if(d.status!=='completed')continue;for(const i of d.items||[]){const key=String(i.productId)+'@@'+String(i.warehouseId);returned.set(key,(returned.get(key)||0)+Number(i.qty||0));}}
       const lines=(order.items||[]).map(line=>({productId:String(line.productId),warehouseId:String(line.warehouseId),soldQty:Number(line.qty),returnedQty:returned.get(String(line.productId)+'@@'+String(line.warehouseId))||0}));
       return send(200,{ok:true,orderId:data.orderId,lines});
+    }
+    if(action==='reconciliations'){
+      const snap=await db.collection('noorReconciliations').where('pointOfSaleId','==',site).get();
+      return send(200,{ok:true,entries:snap.docs.map(d=>d.data()).sort((a,b)=>String(b.createdAtClient).localeCompare(String(a.createdAtClient))).slice(0,30)});
+    }
+    if(action==='reconcile'){
+      // Snapshot indicativo: i dati non sono una chiusura fiscale e possono cambiare con nuove vendite.
+      const day=String(data.day||'');
+      const activePeriod=String(config.data().managementPeriodStartAt||'').slice(0,10);
+      if(activePeriod && day<activePeriod)throw new SaleError(409,'Giornata precedente al periodo gestionale attivo.');
+      if(day>now.slice(0,10))throw new SaleError(400,'Impossibile registrare una quadratura futura.');
+      const ordersSnap=await db.collection('orders').where('pointOfSaleId','==',site).get();
+      const refundsSnap=await db.collection('noorRefunds').where('pointOfSaleId','==',site).get();
+      const movementSnap=await db.collection('noorCashMovements').where('pointOfSaleId','==',site).get();
+      const dayOf=d=>String(d.createdAtClient||'').slice(0,10);
+      // Solo ordini contanti espliciti. Nessuna stima per ordini con metodo non identificato.
+      const todayOrders=ordersSnap.docs.map(x=>x.data()).filter(x=>dayOf(x)===day&&x.status==='completed');
+      if(todayOrders.some(x=>!['cash','contanti'].includes(String(x.paymentMethod||x.payment||'').toLowerCase())))
+        throw new SaleError(409,'Quadratura non disponibile: giornata con pagamenti non-contanti o non riconosciuti.');
+      const sum=(arr,key)=>arr.reduce((n,x)=>n+Number(x[key]||0),0);
+      const sold=sum(todayOrders.map(x=>({cents:Math.round(Number(x.total||0)*100)})),'cents');
+      const returned=sum(refundsSnap.docs.map(x=>x.data()).filter(x=>dayOf(x)===day&&x.status==='completed'&&x.refundMethod==='cash'),'amountCents');
+      const todayMovements=movementSnap.docs.map(x=>x.data()).filter(x=>dayOf(x)===day);
+      const ins=sum(todayMovements.filter(x=>x.type==='cash_in'),'amountCents');
+      const outs=sum(todayMovements.filter(x=>x.type==='cash_out'),'amountCents');
+      const expected=sold-returned+ins-outs;
+      if(expected<0)throw new SaleError(409,'Contante teorico negativo: verificare i movimenti prima della quadratura.');
+      const valid=validateCashReconciliation(data,expected);
+      const key=site+'__'+day;
+      const ref=db.doc('noorReconciliations/'+key);
+      await db.runTransaction(async tx=>{
+        const old=await tx.get(ref);
+        if(old.exists)throw new SaleError(409,'Quadratura già registrata per questa sede e giornata.');
+        tx.create(ref,{...valid,createdByUid:verified.uid,createdAtClient:now,createdAt:admin.firestore.FieldValue.serverTimestamp(),source:'noor-staging-reconciliation',finalClosure:false});
+      });
+      return send(200,{ok:true,...valid,warning:'Quadratura di prova; non equivale a chiusura fiscale definitiva.'});
     }
     if(action==='movement'){
       const movement=validateCashMovement(data);

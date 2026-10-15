@@ -2946,3 +2946,28 @@ PY
 .noor-finance-ledger th,.noor-finance-ledger td{padding:10px 12px;text-align:left;border-bottom:1px solid #dfe3ec;font-size:.9rem}
 .noor-finance-ledger th{font-weight:700}
 .noor-refund-line small{display:block;color:var(--muted,#6b7280);margin-top:5px}
+
+/* Contabilità e Resi — NOOR unified visual style */
+.noor-refund-search{background:var(--surface,#fff);border:1px solid var(--border,#e3e7ef);border-radius:18px;padding:18px;box-shadow:0 8px 28px rgba(25,35,66,.045);margin:18px 0}
+.noor-refund-search>label{display:flex;flex-direction:column;gap:10px;font-weight:700}
+.noor-refund-search input{width:100%;min-height:48px;border-radius:12px;border:1px solid #cdd5e2;padding:12px 15px;font:inherit;background:var(--surface,#fff);color:inherit}
+.noor-refund-search input:focus{outline:2px solid var(--primary,#4b69d1);outline-offset:2px}
+.noor-refund-search>small{display:block;color:var(--muted,#6b7280);margin-top:9px;line-height:1.5}
+.noor-refund-results{display:grid;gap:9px;max-height:365px;overflow:auto;margin-top:16px}
+.noor-refund-result{display:flex;justify-content:space-between;align-items:center;gap:16px;width:100%;text-align:left;padding:15px;border:1px solid #e2e7f0;border-radius:12px;background:var(--surface,#fff);color:inherit;cursor:pointer;font:inherit;transition:border-color .15s,box-shadow .15s}
+.noor-refund-result:hover,.noor-refund-result.selected{border-color:var(--primary,#5373d7);box-shadow:0 4px 14px rgba(41,77,143,.09)}
+.noor-refund-result span{display:grid;gap:5px;min-width:0}.noor-refund-result small{font-size:.79rem;color:var(--muted,#6b7280);overflow-wrap:anywhere}
+.noor-refund-result>b{white-space:nowrap;font-size:1.05rem}
+.noor-refund-details{margin:16px 0}.noor-refund-details:not(:empty){padding:20px;border:1px solid #e0e6f0;border-radius:16px;background:var(--surface,#fff)}
+.noor-refund-details-head{display:flex;justify-content:space-between;align-items:center;gap:12px}.noor-refund-details-head h3{margin:6px 0}.noor-refund-details-head p{color:var(--muted,#6b7280);margin:0}.noor-refund-details-head small{font-weight:700;letter-spacing:.08em;color:var(--muted,#6b7280)}.noor-refund-details-head>strong{font-size:1.5rem}
+.noor-refund-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:18px}.noor-refund-facts>div{display:grid;gap:5px;background:var(--bg,#f5f7fb);border-radius:10px;padding:12px}.noor-refund-facts small{color:var(--muted,#6b7280)}
+.noor-refund-line{border:1px solid #e3e8f0;border-radius:12px;margin:10px 0;padding:14px 16px;justify-content:space-between}.noor-refund-line-label{display:grid;gap:5px;min-width:0;flex:1}.noor-refund-line input[type=number]{width:90px;border:1px solid #cdd5e2;padding:9px;border-radius:10px;background:var(--surface,#fff);color:inherit}
+.noor-finance-tile{border-radius:16px;box-shadow:0 5px 20px rgba(35,51,83,.035)}.noor-finance-ledger{background:var(--surface,#fff);border:1px solid #e1e6ed;border-radius:16px;padding:16px}
+@media(max-width:620px){.noor-refund-facts{grid-template-columns:1fr}.noor-refund-result{align-items:flex-start}.noor-refund-details-head{align-items:flex-start}}
+
+/* NOOR — compact receipt references and return status */
+.noor-refund-number-row{display:flex!important;align-items:center;gap:9px;flex-wrap:wrap;min-width:0}
+.noor-refund-number-row strong{font-weight:750;overflow-wrap:anywhere}
+.noor-refund-status{display:inline-flex!important;align-items:center;justify-content:center;width:max-content;min-width:max-content;padding:4px 9px;border-radius:999px;font-size:.66rem!important;line-height:1.25;font-weight:800;letter-spacing:.05em;background:#fff0dc;color:#8e4f04;border:1px solid #efd1a1}
+.noor-refund-status.completed{background:#e6f7ee;color:#12623c;border-color:#b8e3ce}
+.noor-refund-status.partial{background:#fff2dc;color:#87500d;border-color:#f4d7a8}

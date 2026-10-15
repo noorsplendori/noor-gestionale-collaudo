@@ -48,7 +48,7 @@ const routePaths={
   'employee-overview':'/dipendenti/panoramica',
   roles:'/dipendenti/ruoli',
   shifts:'/turni',
-  finance:'/gestione-monetaria',
+  finance:'/contabilita',
   returns:'/resi-rimborsi',
   closures:'/chiusure',
   'closure-detail':'/chiusure/dettaglio',
@@ -60,7 +60,7 @@ const routePaths={
   profile:'/profilo'
 };
 
-const pathRoutes=Object.fromEntries(Object.entries(routePaths).map(([route,path])=>[path,route]));
+const pathRoutes={...Object.fromEntries(Object.entries(routePaths).map(([route,path])=>[path,route])), '/gestione-monetaria':'finance'};
 let onRoute=()=>{};
 let routerStarted=false;
 

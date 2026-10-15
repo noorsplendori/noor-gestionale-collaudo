@@ -13,11 +13,11 @@ test('manager cannot modify orders or cancelledOrders even with override',()=>{
  assert.match(rules,/allow update: if myRole\(\) != 'manager' && can\('cancelOrders'\)/);
  assert.match(rules,/allow delete: if myRole\(\) != 'manager' && can\('cancelOrders'\)/);
 });
-test('client blocks stock-affecting cancellation for manager',()=>{
+test('client blocks all stock-affecting cancellation until backend storno exists',()=>{
  for(const name of ['cancelOrder','partialCancelOrder','restoreCancelledOrder']){
   const start=store.indexOf('export async function '+name+'(');
   assert.notEqual(start,-1);
-  assert.match(store.slice(start,start+430),/role.*manager.*STAGING/);
+  assert.match(store.slice(start,start+250),/throw new Error\('STAGING: /);
  }
 });
 test('seller order creation remains blocked without manageProducts',()=>{

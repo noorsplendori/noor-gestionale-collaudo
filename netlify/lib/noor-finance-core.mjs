@@ -57,3 +57,15 @@ export function summarizeLedger(orders,refunds,movements){
   const cashOutCents=sum(movements.filter(d=>d.type==='cash_out'),'amountCents');
   return {salesCents,refundCents,cashInCents,cashOutCents,netCents:salesCents-refundCents+cashInCents-cashOutCents};
 }
+
+// Snapshot di quadratura: non chiude fiscalmente il giorno e non blocca vendite successive.
+export function validateCashReconciliation(input, expectedCents) {
+  const site=text(input?.pointOfSaleId), day=text(input?.day), id=text(input?.operationId);
+  const actual=Number(input?.countedCashCents), note=text(input?.note);
+  if(!/^[a-zA-Z0-9_-]{12,90}$/.test(id)||!site)throw new SaleError(400,'Identificativo quadratura o sede non valido.');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(day)||!Number.isFinite(Date.parse(day+'T00:00:00Z')))throw new SaleError(400,'Data quadratura non valida.');
+  if(!Number.isSafeInteger(actual)||actual<0||actual>100000000)throw new SaleError(400,'Contante contato non valido.');
+  if(!Number.isSafeInteger(expectedCents)||Math.abs(expectedCents)>100000000)throw new SaleError(409,'Contante teorico non affidabile.');
+  if(note.length>500)throw new SaleError(400,'Nota troppo lunga.');
+  return {operationId:id,pointOfSaleId:site,day,countedCashCents:actual,expectedCashCents:expectedCents,differenceCents:actual-expectedCents,note};
+}
